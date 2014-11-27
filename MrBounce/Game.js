@@ -1,3 +1,5 @@
+'use strict';
+
 
 BasicGame.Game = function (game) {
 
@@ -23,6 +25,7 @@ BasicGame.Game = function (game) {
     //	You can use any of these from any function within this State.
     //	But do consider them as being 'reserved words', i.e. don't create a property for your own game called "world" or you'll over-write the world reference.
 this.player;
+this.ground;
 };
 
 BasicGame.Game.prototype = {
@@ -42,14 +45,18 @@ BasicGame.Game.prototype = {
     this.ground.autoScroll(-200, 0);
 
     // Add gravity to the player to make it fall
-    this.game.physics.arcade.enable(this.player);
-    this.player.body.gravity.y = 1000;  
+    this.game.physics.arcade.enable([this.player, this.ground]);
+   
+
+    this.ground.body.immovable = true;
+    this.ground.body.allowGravity = false;
 
 	},
 
 	update: function () {
 
 		//	Honestly, just about anything could go here. It's YOUR game after all. Eat your heart out!
+    this.game.physics.arcade.collide(this.player, this.ground);
 
 	},
 

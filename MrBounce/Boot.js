@@ -1,3 +1,6 @@
+'use strict';
+
+
 var BasicGame = {};
 
 BasicGame.Boot = function (game) {

@@ -1,3 +1,5 @@
+'use strict';
+
 
 BasicGame.Preloader = function (game) {
 
@@ -28,6 +30,7 @@ BasicGame.Preloader.prototype = {
 
 	    this.load.image('player', 'assets/player.png');
 	    this.load.image('ground', 'assets/ground.png');
+	    this.load.image('platform', 'assets/platform.png');
 
 	},
 

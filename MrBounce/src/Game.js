@@ -1,5 +1,5 @@
 define([
-    'phaser', 'player', 'Platform'
+    'phaser', 'Player', 'Platform'
 ], function(Phaser, Player, Platform) {
     'use strict';
 

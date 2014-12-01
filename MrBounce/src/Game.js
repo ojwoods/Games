@@ -1,6 +1,6 @@
 define([
-    'phaser', 'Player', 'Platform'
-], function(Phaser, Player, Platform) {
+    'phaser', 'Player', 'Platform', 'Barrier', 'Coin'
+], function(Phaser, Player, Platform, Barrier, Coin) {
     'use strict';
 
     function Game() {
@@ -10,7 +10,10 @@ define([
         //  But do consider them as being 'reserved words', i.e. don't create a property for your own game called "world" or you'll over-write the world reference.
         this.player = null;
         this.platformsGroup = null;
-        this.ground = null;
+        this.barriersGroup = null;
+        this.coinsGroup = null;
+        this.groundFG = null;
+        this.groundBG = null;
     }
 
     Game.prototype = {
@@ -34,22 +37,34 @@ define([
             this.player = new Player(this.game, 100, 50, null);
             this.game.add.existing(this.player);
 
-            // Gropund
-                        this.ground2 = this.game.add.tileSprite(0, 400, 640, 64, 'ground');
+            // Ground
+            this.groundBG = this.game.add.tileSprite(0, this.game.world.height - 64, this.game.world.width, 64, 'ground');
+            this.groundFG = this.game.add.tileSprite(0, this.game.world.height - 32, this.game.world.width, 64, 'ground');
 
-            this.ground = this.game.add.tileSprite(0, 416, 640, 64, 'ground');
-            this.ground.autoScroll(-200, 0);
-            this.ground2.autoScroll(-100, 0);
+            this.groundBG.autoScroll(-100, 0);
+            this.groundFG.autoScroll(-200, 0);
 
             // Add gravity to the player to make it fall
-            this.game.physics.arcade.enable(this.ground);
+            this.game.physics.arcade.enable(this.groundFG);
 
-            this.ground.body.immovable = true;
-            this.ground.body.allowGravity = false;
+            this.groundFG.body.immovable = true;
+            this.groundFG.body.allowGravity = false;
 
+            // Add controls
             this.input.onUp.add(this.addPlatform, this);
 
+            // Platforms and Barriers are grouped for reusablility
             this.platformsGroup = this.game.add.group();
+            this.barriersGroup = this.game.add.group();
+            this.coinsGroup = this.game.add.group();
+
+            // add a timer for barrier creation
+            this.barrierGenerator = this.game.time.events.loop(Phaser.Timer.SECOND * 1.5, this.generateBarriers, this);
+            this.barrierGenerator.timer.start();
+
+            this.coinGenerator = this.game.time.events.loop(Phaser.Timer.SECOND * 0.5, this.generateCoins, this);
+            this.coinGenerator.timer.start();
+
 
         },
 
@@ -59,7 +74,7 @@ define([
             this.game.physics.arcade.collide(this.player, this.ground);
             this.game.physics.arcade.collide(this.player, this.platformsGroup, this.platformCollideHandler, null, this);
 
-            this.player.body.x=100;
+            this.player.body.x = 100;
 
         },
 
@@ -73,22 +88,61 @@ define([
 
         },
 
+        generateBarriers: function() {
+            var barrier = this.barriersGroup.getFirstExists(false);
+            if (!barrier) {
+                barrier = new Barrier(this.game);
+                this.game.add.existing(barrier);
+                this.barriersGroup.add(barrier);
+            }
+
+            var position = this.game.rnd.pick([1, 2]);
+            var yOffest = this.game.rnd.integerInRange(0, 64);
+            var barrierY = 0;
+            if (position === 1) //TOP
+            {
+                barrierY = 128 - yOffest;
+            } else {
+                barrierY = this.game.height - 128 + yOffest;
+            }
+
+            barrier.reset(this.game.width + 100, barrierY);
+            barrier.body.velocity.x = -200;
+
+        },
+
+        generateCoins: function() {
+            var coin = this.coinsGroup.getFirstExists(false);
+            if (!coin) {
+                coin = new Coin(this.game);
+                this.game.add.existing(coin);
+                this.coinsGroup.add(coin);
+            }
+
+            var position = this.game.rnd.pick([1, 2]);
+            var yOffest = this.game.rnd.integerInRange(0, this.game.height);
+
+            coin.reset(this.game.width + 32, yOffest);
+            coin.body.velocity.x = -200;
+
+        },
+
         addPlatform: function() {
             var platform = this.platformsGroup.getFirstExists(false);
             if (!platform) {
                 platform = new Platform(this.game);
                 this.game.add.existing(platform);
-                console.log("NEw platform");
                 this.platformsGroup.add(platform);
             }
             platform.reset(this.game.input.x, this.game.input.y);
             platform.body.velocity.x = -200;
-
         },
 
         platformCollideHandler: function() {
-           this.player.body.velocity.y = -600;
-           this.game.add.tween(this.player).from({ angle: 0 }, 1000).start();
+            this.player.body.velocity.y = -600;
+            this.game.add.tween(this.player).from({
+                angle: 0
+            }, 1000).start();
         },
     };
 

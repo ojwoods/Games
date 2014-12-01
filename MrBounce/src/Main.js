@@ -16,7 +16,7 @@
     });
 
     require(['phaser', 'Boot', 'Preloader', 'Game'], function(Phaser, Boot, Preloader, Game) {
-        var game = new Phaser.Game(640, 480, Phaser.AUTO, '');
+        var game = new Phaser.Game(800, 600, Phaser.AUTO);
         var bootState = new Boot();
 
         game.state.add('Boot', bootState);

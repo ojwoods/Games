@@ -31,6 +31,8 @@ define([
             this.load.image('player', 'assets/player.png');
             this.load.image('ground', 'assets/ground.png');
             this.load.image('platform', 'assets/platform.png');
+            this.load.image('barrier', 'assets/barrier.png');
+            this.load.image('coin', 'assets/coin.png');
 
         },
 

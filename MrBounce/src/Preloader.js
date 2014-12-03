@@ -33,6 +33,10 @@ define([
             this.load.image('platform', 'assets/platform.png');
             this.load.image('barrier', 'assets/barrier.png');
             this.load.image('coin', 'assets/coin.png');
+            this.load.image('baddie1', 'assets/baddie1.png');
+            this.load.image('particle', 'assets/particle.png');
+            this.load.image('font', 'assets/font.png');
+
 
         },
 

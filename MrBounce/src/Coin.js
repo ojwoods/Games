@@ -8,7 +8,7 @@ define([
         this.anchor.setTo(0.5, 0.5);
         this.game.physics.arcade.enableBody(this);
 
-        this.body.immovable = true;
+        //this.body.immovable = true;
         //this.body.checkCollision.up = true;
         //this.body.checkCollision.down = false;
 

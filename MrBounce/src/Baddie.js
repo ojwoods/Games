@@ -9,9 +9,6 @@ define([
         this.game.physics.arcade.enableBody(this);
 
         this.body.immovable = true;
-        //this.body.checkCollision.up = true;
-        //this.body.checkCollision.down = false;
-
 
         this.checkWorldBounds = true;
         this.outOfBoundsKill = true;

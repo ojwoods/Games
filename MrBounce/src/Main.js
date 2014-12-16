@@ -22,7 +22,7 @@
             height = (h > w) ? w : h;
 
         // Hack to avoid iPad Retina and large Android devices. Tell it to scale up.
-        if (window.innerWidth >= 1024 && window.devicePixelRatio >= 2) {
+     /*  if (window.innerWidth >= 1024 && window.devicePixelRatio >= 2) {
             width = Math.round(width / 2);
             height = Math.round(height / 2);
         }
@@ -30,9 +30,9 @@
         if (window.devicePixelRatio === 3) {
             width = Math.round(width / 3) * 2;
             height = Math.round(height / 3) * 2;
-        }
+        }*/
 
-        var game = new Phaser.Game(width, height, Phaser.AUTO);
+        var game = new Phaser.Game(800, 600, Phaser.AUTO);
         var bootState = new Boot();
 
         game.state.add('Boot', bootState);

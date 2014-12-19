@@ -36,6 +36,9 @@ define([
             this.load.image('baddie1', 'assets/baddie1.png');
             this.load.image('particle', 'assets/particle.png');
             this.load.image('font', 'assets/font.png');
+            this.load.image('font', 'assets/font.png');
+            this.load.spritesheet('startButton', 'assets/flixel-button.png', 80, 20, 3);
+
 
 
         },

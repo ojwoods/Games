@@ -18,11 +18,15 @@ define([
         this.baddie = null;
         this.emitter = null;
         this.playerEmitter = null;
+        this.startButton = null;
         this.platformsLeftText = null;
         this.scoreText = null;
+        this.finalScoreText = null;
+
         this.score = 0;
         this.platformsLeft = 0;
         this.difficulty = 1;
+
 
         this.barrierGeneratorEvent = null;
         this.coinGeneratorEvent = null;
@@ -40,8 +44,8 @@ define([
         create: function() {
 
             this.game.stage.backgroundColor = '#71c5cf';
-this.game.renderer.renderSession.roundPixels = true;
-this.game.stage.smoothed = false;
+            this.game.renderer.renderSession.roundPixels = true;
+            this.game.stage.smoothed = false;
 
 
             // Set the physics system
@@ -56,21 +60,18 @@ this.game.stage.smoothed = false;
             this.playerEmitter = this.game.add.emitter(0, 0, 100);
             this.playerEmitter.makeParticles('particle');
             this.playerEmitter.gravity = 200;
-            this.playerEmitter.minParticleScale = 0.1;
-    this.playerEmitter.maxParticleScale = 0.5;
+            this.playerEmitter.minParticleScale = 0.75;
+            this.playerEmitter.maxParticleScale = 1;
 
-    this.playerEmitter.setXSpeed(-100, -150);
+            this.playerEmitter.setXSpeed(-100, -150);
 
-            // Display the bird on the screen
-            this.player = new Player(this.game, 100, 50, null);
-            this.game.add.existing(this.player);
+
 
             // Ground
             this.groundBG = this.game.add.tileSprite(0, this.game.world.height - 50, this.game.world.width, 64, 'ground');
             this.groundFG = this.game.add.tileSprite(0, this.game.world.height - 32, this.game.world.width, 64, 'ground');
 
-            this.groundBG.autoScroll(-100, 0);
-            this.groundFG.autoScroll(-200, 0);
+
 
             // Add gravity to the player to make it fall
             this.game.physics.arcade.enable(this.groundFG);
@@ -88,7 +89,10 @@ this.game.stage.smoothed = false;
 
             this.createGameObjects();
 
-           
+            // Display the bird on the screen
+            this.player = new Player(this.game, 100, 50, null);
+            this.player.kill();
+            this.game.add.existing(this.player);
 
             this.baddie = new Baddie(this.game, this.game.world.width + 50, this.game.world.height / 2, null);
             this.game.add.existing(this.baddie);
@@ -100,34 +104,29 @@ this.game.stage.smoothed = false;
                 align: "center"
             };
 
-            this.scoreText = this.game.add.text(this.game.world.centerX+200, 5, "Score: " + this.score, style);
+            var finalStyle = {
+                font: "50px Arial",
+                fill: "#fff",
+                align: "center"
+            };
+
+            this.scoreText = this.game.add.text(this.game.world.centerX + 200, 5, "Score: " + this.score, style);
             this.scoreText.anchor.set(0.5, 0);
 
-            this.platformsLeftText = this.game.add.text(this.game.world.centerX-200, 5, "Platforms: " + this.platformsLeft, style);
+            this.finalScoreText = this.game.add.text(this.game.world.centerX, this.game.world.centerY, "Score: " + this.score, finalStyle);
+            this.finalScoreText.anchor.set(0.5, 0);
+            this.finalScoreText.visible = false;
+
+            this.platformsLeftText = this.game.add.text(this.game.world.centerX - 200, 5, "Platforms: " + this.platformsLeft, style);
             this.platformsLeftText.anchor.set(0.5, 0);
 
-            this.restartGame();
+
+            this.startButton = this.game.add.button(this.game.world.centerX - 95, 400, 'startButton', this.restartGame, this, 2, 1, 0);
+            this.startButton.visible = true;
+
+
         },
 
-        update: function() {
-
-            //  Honestly, just about anything could go here. It's YOUR game after all. Eat your heart out!
-            this.game.physics.arcade.collide(this.player, this.platformsGroup, this.platformCollideHandler, null, this);
-            this.game.physics.arcade.collide(this.player, this.barriersGroup, this.playerGameOver, null, this);
-            this.game.physics.arcade.collide(this.player, this.baddie, this.playerGameOver, null, this);
-            this.game.physics.arcade.collide(this.player, this.coinsGroup, null, this.collectCoin, this);
-
-            this.player.body.x = 100;
-
-            this.playerEmitter.x=this.player.body.x;
-            this.playerEmitter.y=this.player.body.y;
-
-
-            if (!this.player.inWorld) {
-                this.playerGameOver();
-            }
-
-        },
 
         restartGame: function() {
             this.score = 0;
@@ -136,6 +135,9 @@ this.game.stage.smoothed = false;
             this.platformsLeftText.text = "Platforms: " + (this.platformsLeft);
 
             this.player.reset(100, 0);
+            this.player.alive = true;
+            this.player.body.allowGravity = true;
+
 
             this.canPlacePlatform = true;
             this.difficulty = 1;
@@ -159,33 +161,87 @@ this.game.stage.smoothed = false;
             this.coinGeneratorEvent.start();
             this.difficultyIncrementEvent.start();
 
+            this.groundBG.autoScroll(-100, 0);
+            this.groundFG.autoScroll(-200, 0);
+
             this.playerEmitter.start(false, 5000, 20);
+
+            this.startButton.visible = false;
+            this.finalScoreText.visible = false;
+
+
         },
 
         playerGameOver: function() {
             this.player.kill();
             this.baddie.kill();
+
+            this.startButton.visible = true;
+            this.finalScoreText.visible = true;
+
+            if (localStorage) {
+                var highScore = localStorage['highscore'];
+                if (!highScore) {
+                    localStorage['highscore'] = this.score;
+                } else if (this.score > parseInt(highScore)) {
+                    localStorage['highscore'] = this.score;
+                }
+            }
+            this.finalScoreText.text = "Score: " + (this.score) + " High: "+localStorage['highscore'];
+        },
+
+        playerDeath: function() {
+            // Do not create anymore stuff, event off
             this.barrierGeneratorEvent.destroy();
             this.coinGeneratorEvent.destroy();
             this.difficultyIncrementEvent.destroy();
-            this.quitGame();
+            // ********* Should this all go in the player class???
+
+            this.player.alive = false;
+            this.player.body.allowGravity = false;
+
+
+            this.canPlacePlatform = false;
+
+            this.groundBG.autoScroll(0, 0);
+            this.groundFG.autoScroll(0, 0);
+
+            // stop everything from moving
+            this.coinsGroup.setAll('body.velocity.x', 0);
+            this.barriersGroup.setAll('body.velocity.x', 0);
+            this.platformsGroup.setAll('body.velocity.x', 0);
+            //this.baddie.set('body.velocity.x', 0);
+
+            var deathTween = this.game.add.tween(this.player.body);
+            deathTween.to({
+                y: "-250"
+            }, 1000, Phaser.Easing.Cubic.Out, false, 500);
+
+            deathTween.to({
+                y: this.game.height + 30
+            }, 1000, Phaser.Easing.Cubic.In, true)
+            deathTween.onComplete.addOnce(this.playerGameOver, this);
+
+            deathTween.start();
+            //this.platformsGroup.callAll('kill');
+
         },
 
 
         createGameObjects: function() {
             // Coins
             for (var coinsNdx = 0; coinsNdx < 15; coinsNdx++) {
-                var coin = new Coin(this.game);
+                var coin = new Coin(this.game, -100, -100);
                 this.coinsGroup.add(coin);
             }
             // Barriers
             for (var barrierNdx = 0; barrierNdx < 5; barrierNdx++) {
-                var barrier = new Barrier(this.game);
+                var barrier = new Barrier(this.game, -100, -100);
                 this.barriersGroup.add(barrier);
             }
             // Platforms
             for (var platformNdx = 0; platformNdx < 3; platformNdx++) {
-                var platform = new Platform(this.game);
+                var platform = new Platform(this.game, -100, -100);
                 this.platformsGroup.add(platform);
             }
         },
@@ -196,7 +252,6 @@ this.game.stage.smoothed = false;
             //  Stop music, delete sprites, purge caches, free resources, all that good stuff.
 
             //  Then let's go back to the main menu.
-            this.restartGame();
 
         },
 
@@ -206,11 +261,20 @@ this.game.stage.smoothed = false;
                 var position = this.game.rnd.pick([1, 2]);
                 var yOffest = this.game.rnd.integerInRange(0, 64);
                 var barrierY = 0;
+                this.game.tweens.removeFrom(barrier);
                 if (position === 1) //TOP
                 {
                     barrierY = 128 - yOffest;
+                    this.game.add.tween(barrier.body).to({
+                        y: "-50"
+                    }, this.game.rnd.integerInRange(1000, 750), "Cubic.easeInOut", true, 0, -1, true);
+
                 } else {
                     barrierY = this.game.height - 128 + yOffest;
+                    this.game.add.tween(barrier.body).to({
+                        y: "+50"
+                    }, this.game.rnd.integerInRange(1000, 750), "Cubic.easeInOut", true, 0, -1, true);
+
                 }
 
                 barrier.reset(this.game.width, barrierY);
@@ -218,6 +282,7 @@ this.game.stage.smoothed = false;
                 barrier.body.velocity.x = -200;
                 barrier.checkWorldBounds = true;
                 barrier.outOfBoundsKill = true;
+
 
             }
 
@@ -227,7 +292,7 @@ this.game.stage.smoothed = false;
             var coin = this.coinsGroup.getFirstExists(false);
 
             if (coin) {
-                var yOffest = this.game.rnd.integerInRange(150, this.game.height-150);
+                var yOffest = this.game.rnd.integerInRange(150, this.game.height - 150);
 
                 coin.regenerate(this.game.width, yOffest);
             }
@@ -235,7 +300,7 @@ this.game.stage.smoothed = false;
         },
 
         addPlatform: function() {
-            if (!this.canPlacePlatform || this.platformsLeft<1) {
+            if (!this.canPlacePlatform || this.platformsLeft < 1) {
                 return;
             }
             var platform = this.platformsGroup.getFirstExists(false);
@@ -270,33 +335,38 @@ this.game.stage.smoothed = false;
 
                 this.platformsLeftText.text = "Platforms: " + (this.platformsLeft);
 
-            this.scoreText.text = "Score: " + (++this.score);
             }
 
             return false;
         },
 
         platformCollideHandler: function(obj1, obj2) {
-            this.player.body.velocity.y = -500;
-            this.player.body.angle = 0;
-            this.canPlacePlatform = true;
-            this.game.add.tween(this.player).to({
-                angle: 360
-            }, 1000).start();
+            if (obj2.alive) {
+                this.player.body.velocity.y = -500;
+                this.player.body.angle = 0;
+                this.canPlacePlatform = true;
+                obj2.alive = false;
+                this.game.add.tween(this.player).to({
+                    angle: 360
+                }, 1000).start();
 
-            var platformKillTween = this.game.add.tween(obj2);
-            platformKillTween.to({
-                alpha: 0,
-            }, 500, Phaser.Easing.Linear.None);
-            platformKillTween.onComplete.addOnce(obj2.kill);
-            platformKillTween.start();
+                var platformKillTween = this.game.add.tween(obj2);
+                platformKillTween.to({
+                    alpha: 0,
+                }, 500, Phaser.Easing.Linear.None);
+                platformKillTween.onComplete.addOnce(obj2.kill);
+                platformKillTween.start();
 
-            //  Position the emitter where the player is
-            this.emitter.x = this.player.body.x;
-            this.emitter.y = this.player.body.y;
-            this.emitter.setAlpha(1, 0);
+                //  Position the emitter where the player is
+                this.emitter.x = this.player.body.x;
+                this.emitter.y = this.player.body.y;
+                this.emitter.setAlpha(1, 0);
 
-            this.emitter.start(true, 1000, null, 10);
+                this.emitter.start(true, 1000, null, 10);
+
+                this.scoreText.text = "Score: " + (++this.score);
+            }
+
 
             ;
         },
@@ -324,6 +394,29 @@ this.game.stage.smoothed = false;
                     break;
                 default:
             }
+        },
+
+
+        update: function() {
+
+            if (this.player.alive) {
+                //  Honestly, just about anything could go here. It's YOUR game after all. Eat your heart out!
+                this.game.physics.arcade.collide(this.player, this.platformsGroup, this.platformCollideHandler, null, this);
+                this.game.physics.arcade.collide(this.player, this.barriersGroup, this.playerDeath, null, this);
+                this.game.physics.arcade.collide(this.player, this.baddie, this.playerDeath, null, this);
+                this.game.physics.arcade.collide(this.player, this.coinsGroup, null, this.collectCoin, this);
+
+                this.player.body.x = 100;
+
+                this.playerEmitter.x = this.player.body.x;
+                this.playerEmitter.y = this.player.body.y;
+
+
+                if (!this.player.inWorld) {
+                    this.playerDeath();
+                }
+            }
+
         },
     };
 

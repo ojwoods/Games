@@ -4,7 +4,7 @@ define([
     'use strict';
 
     var Platform = function Platform(game, x, y, frame) {
-        Phaser.Sprite.call(this, game, x, y, 'platform', frame);
+        Phaser.Sprite.call(this, game, x, y, 'spritesheet', 'platform.png');
         this.anchor.setTo(0.5, 0.5);
         this.game.physics.arcade.enableBody(this);
 

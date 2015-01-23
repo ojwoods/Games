@@ -7,7 +7,7 @@ define([
         Phaser.Sprite.call(this, game, x, y, 'barrier', frame);
         this.anchor.setTo(0.5, 0.5);
         this.game.physics.arcade.enableBody(this);
-
+this.body.width=32;
         this.body.immovable = true;
         //this.body.checkCollision.up = true;
         //this.body.checkCollision.down = false;

@@ -6,7 +6,7 @@ define([
     var Coin = function Coin(game, x, y, frame) {
         var isCollected = false;
 
-        Phaser.Sprite.call(this, game, x, y, 'coin', frame);
+        Phaser.Sprite.call(this, game, x, y, 'spritesheet', 'a1.png');
         this.anchor.setTo(0.5, 0.5);
         this.game.physics.arcade.enableBody(this);
 
@@ -17,6 +17,21 @@ define([
 
         this.checkWorldBounds = true;
         this.outOfBoundsKill = true;
+
+         // add animation phases
+    this.animations.add('spin', [
+        'a1.png',
+        'a2.png',
+        'a3.png',
+        'a4.png',
+        'a5.png',
+        'a6.png',
+        'a7.png',
+        'a8.png'
+    ], 10, true, false);
+
+    // play animation
+    this.animations.play('spin', 10, true);
     };
 
     Coin.prototype = Object.create(Phaser.Sprite.prototype);

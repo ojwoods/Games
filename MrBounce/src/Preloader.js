@@ -28,16 +28,16 @@ define([
 
             //	Here we load the rest of the assets our game needs.
 
-            this.load.image('player', 'assets/player.png');
+            this.load.image('bg', 'assets/background.png');
             this.load.image('ground', 'assets/ground.png');
-            this.load.image('platform', 'assets/platform.png');
+            this.load.image('ground2', 'assets/ground2.png');
             this.load.image('barrier', 'assets/barrier.png');
-            this.load.image('coin', 'assets/coin.png');
             this.load.image('baddie1', 'assets/baddie1.png');
-            this.load.image('particle', 'assets/particle.png');
             this.load.image('font', 'assets/font.png');
-            this.load.image('font', 'assets/font.png');
+            this.load.image('play', 'assets/play.png');
             this.load.spritesheet('startButton', 'assets/flixel-button.png', 80, 20, 3);
+        this.load.atlasJSONHash('spritesheet', 'assets/spritesheet.png', 'assets/spritesheet.json');
+            this.load.image('platform-particle','assets/platform-particle.png');
 
 
 

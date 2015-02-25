@@ -164,8 +164,36 @@
             <filename>assets/spritesheets/Coin-Collection.png</filename>
             <filename>assets/spritesheets/Get-Ready.png</filename>
             <filename>assets/spritesheets/Game-Over.png</filename>
-            <filename>assets/spritesheets/platform-particle.png</filename>
             <filename>assets/platform.png</filename>
+            <filename>assets/spritesheets/raven/frame-1.png</filename>
+            <filename>assets/spritesheets/raven/frame-2.png</filename>
+            <filename>assets/spritesheets/raven/frame-3.png</filename>
+            <filename>assets/spritesheets/raven/frame-4.png</filename>
+            <filename>assets/spritesheets/raven/baddy1-1.png</filename>
+            <filename>assets/spritesheets/raven/baddy1-2.png</filename>
+            <filename>assets/spritesheets/raven/baddy1-3.png</filename>
+            <filename>assets/spritesheets/raven/baddy1-4.png</filename>
+            <filename>assets/spritesheets/raven/baddy1-5.png</filename>
+            <filename>assets/spritesheets/raven/baddy1-6.png</filename>
+            <filename>assets/ground.png</filename>
+            <filename>assets/ground2.png</filename>
+            <filename>assets/barrier.png</filename>
+            <filename>assets/play.png</filename>
+            <filename>../../games/MrBounce/assets/spritesheets/virus/frame-1-2.png</filename>
+            <filename>../../games/MrBounce/assets/spritesheets/virus/frame-2-2.png</filename>
+            <filename>../../games/MrBounce/assets/spritesheets/virus/frame-3-2.png</filename>
+            <filename>../../games/MrBounce/assets/spritesheets/virus/frame-4-2.png</filename>
+            <filename>../../games/MrBounce/assets/spritesheets/virus/frame-5-2.png</filename>
+            <filename>../../games/MrBounce/assets/spritesheets/virus/frame-6-2.png</filename>
+            <filename>../../games/MrBounce/assets/spritesheets/virus/frame-7-2.png</filename>
+            <filename>../../games/MrBounce/assets/spritesheets/virus/frame-8-2.png</filename>
+            <filename>../../games/MrBounce/assets/Up-Green.png</filename>
+            <filename>assets/spritesheets/explodes/explode-1.png</filename>
+            <filename>assets/spritesheets/explodes/explode-2.png</filename>
+            <filename>assets/spritesheets/explodes/explode-3.png</filename>
+            <filename>assets/spritesheets/explodes/explode-4.png</filename>
+            <filename>assets/spritesheets/explodes/explode-5.png</filename>
+            <filename>assets/spritesheets/Stage-Clear.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

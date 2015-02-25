@@ -15,7 +15,7 @@
         }
     });
 
-    require(['phaser', 'Boot', 'Preloader', 'Game'], function(Phaser, Boot, Preloader, Game) {
+    require(['phaser', 'Boot', 'Preloader', 'Game', 'MainMenu'], function(Phaser, Boot, Preloader, Game, MainMenu) {
         var w = window.innerWidth * window.devicePixelRatio,
             h = window.innerHeight * window.devicePixelRatio,
             width = (h > w) ? h : w,
@@ -37,7 +37,7 @@
 
         game.state.add('Boot', bootState);
         game.state.add('Preloader', new Preloader());
-        // game.state.add('MainMenu', BasicGame.MainMenu);
+        game.state.add('MainMenu', new MainMenu());
         game.state.add('Game', new Game());
 
         //  Now start the Boot state.

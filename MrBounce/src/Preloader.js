@@ -17,8 +17,8 @@ define([
             //	These are the assets we loaded in Boot.js
             //	A nice sparkly background and a loading progress bar
 
-            this.background = this.add.sprite(0, 0, 'preloaderBackground');
-            this.preloadBar = this.add.sprite(300, 400, 'preloaderBar');
+            this.background = this.add.sprite(0, 0, 'loader');
+            this.preloadBar = this.add.sprite((this.game.width/2)-100, 450, 'preloaderBar');
 
             //	This sets the preloadBar sprite as a loader sprite.
             //	What that does is automatically crop the sprite from 0 to full-width
@@ -28,24 +28,24 @@ define([
 
             //	Here we load the rest of the assets our game needs.
 
-            this.load.image('bg', 'assets/background.png');
-            this.load.image('ground', 'assets/ground.png');
-            this.load.image('ground2', 'assets/ground2.png');
-            this.load.image('barrier', 'assets/barrier.png');
-            this.load.image('baddie1', 'assets/baddie1.png');
             this.load.image('font', 'assets/font.png');
             this.load.image('play', 'assets/play.png');
-            this.load.spritesheet('startButton', 'assets/flixel-button.png', 80, 20, 3);
-        this.load.atlasJSONHash('spritesheet', 'assets/spritesheet.png', 'assets/spritesheet.json');
-            this.load.image('platform-particle','assets/platform-particle.png');
+            this.load.image('logo', 'assets/logo.png');
+            this.load.image('bg', 'assets/background.png');
 
 
+            this.load.atlasJSONHash('spritesheet', 'assets/spritesheet.png', 'assets/spritesheet.json');
+            this.load.image('platform-particle', 'assets/platform-particle.png');
+
+            this.game.load.audio('bounce', ['assets/bounce.mp3']);
+            this.game.load.audio('coin', ['assets/collectBonus.mp3']);
+            this.game.load.audio('splat', ['assets/wrong.mp3']);
 
         },
 
         create: function() {
 
-            this.state.start('Game');
+            this.state.start('MainMenu');
 
         }
     };

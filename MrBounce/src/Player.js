@@ -30,6 +30,14 @@ define([
             'frame-4.png'
         ], 10, true, false);
 
+        this.animations.add('explode', [
+            'explode-1.png',
+            'explode-2.png',
+            'explode-3.png',
+            'explode-4.png',
+            'explode-5.png'
+        ], 10, true, false);
+
         // play animation
         this.animations.play('fly', 10, true);
     };
@@ -46,6 +54,12 @@ define([
 
     Player.prototype.bounce = function() {
         this.body.velocity.y = -400;
+        this.body.angle = 0;
+    };
+
+    Player.prototype.flyAway = function() {
+        this.body.velocity.y = 0;
+        this.body.velocity.x = 30;
         this.body.angle = 0;
     };
 

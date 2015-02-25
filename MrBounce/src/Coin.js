@@ -37,12 +37,12 @@ define([
     Coin.prototype = Object.create(Phaser.Sprite.prototype);
     Coin.prototype.constructor = Coin;
 
-    Coin.prototype.regenerate = function(x,y) {
+    Coin.prototype.regenerate = function(x,y, velocity) {
         this.reset(x,y);
         this.revive();
         this.alpha=1;
         this.isCollected = false;
-        this.body.velocity.x = -200;
+        this.body.velocity.x = velocity;
     }
     return Coin;
 });

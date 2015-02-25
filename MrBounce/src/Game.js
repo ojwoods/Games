@@ -1,6 +1,6 @@
 define([
-    'phaser', 'Player', 'Platform', 'Barrier', 'Coin', 'Baddie'
-], function(Phaser, Player, Platform, Barrier, Coin, Baddie) {
+    'phaser', 'Player', 'Platform', 'Barrier', 'Coin', 'Baddie', 'Baddie2'
+], function(Phaser, Player, Platform, Barrier, Coin, Baddie, Baddie2) {
     'use strict';
 
     function Game() {
@@ -16,8 +16,10 @@ define([
         this.groundBG = null;
         this.canPlacePlatform = false;
         this.baddie = null;
+        this.baddie2 = null;
         this.emitter = null;
-       // this.playerEmitter = null;
+        this.arrow = null;
+        // this.playerEmitter = null;
         // this.startButton = null;
         //this.platformsLeftText = null;
         this.scoreText = null;
@@ -30,6 +32,11 @@ define([
         this.score = 0;
         //this.platformsLeft = 0;
         this.difficulty = 1;
+        this.scrollVelocity = -200;
+
+        this.bounce = null;
+        this.coin = null;
+        this.splat = null;
 
 
         this.barrierGeneratorEvent = null;
@@ -55,7 +62,7 @@ define([
             // Set the physics system
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
             //  Enable the QuadTree
-            this.game.physics.arcade.skipQuadTree = false;
+            //this.game.physics.arcade.skipQuadTree = false;
             this.game.physics.arcade.enableBody(this);
 
 
@@ -71,14 +78,11 @@ define([
                 align: "center"
             };
 
-            var coinsGraphic = this.game.add.sprite(this.game.width / 2 - 5, 5, 'spritesheet', 'Coin-Collection.png');
-            coinsGraphic.anchor.set(1, 0);
-            this.scoreText = this.game.add.text(this.game.world.centerX + 5, 5, this.score, style);
-            this.scoreText.anchor.set(0, 0);
+
 
             // Ground
-            this.groundBG = this.game.add.tileSprite(0, this.game.world.height - 80, this.game.world.width, 64, 'ground2');
-            this.groundFG = this.game.add.tileSprite(0, this.game.world.height - 64, this.game.world.width, 64, 'ground');
+            this.groundBG = this.game.add.tileSprite(0, this.game.world.height - 80, this.game.world.width, 64, 'spritesheet', 'ground2.png');
+            this.groundFG = this.game.add.tileSprite(0, this.game.world.height - 64, this.game.world.width, 64, 'spritesheet', 'ground.png');
 
 
             // Emitters
@@ -86,7 +90,7 @@ define([
             this.emitter.makeParticles('platform-particle');
             this.emitter.gravity = 200;
 
-          /*  this.playerEmitter = this.game.add.emitter(0, 0, 10);
+            /*  this.playerEmitter = this.game.add.emitter(0, 0, 10);
             this.playerEmitter.makeParticles('particle');
             this.playerEmitter.gravity = 200;
             this.playerEmitter.minParticleScale = 0.75;
@@ -117,9 +121,13 @@ define([
             this.game.add.existing(this.player);
             this.game.physics.enable(this.player, Phaser.Physics.ARCADE);
 
-            this.baddie = new Baddie(this.game, this.game.world.width + 50, this.game.world.height / 2, null);
+            this.baddie = new Baddie(this.game, this.game.width + 100, this.game.world.height / 2, null);
             this.game.add.existing(this.baddie);
+            this.baddie2 = new Baddie2(this.game, -50, this.game.world.height / 2, null);
+            this.game.add.existing(this.baddie2);
 
+
+            //this.baddie2.kill();*/
 
             // User interface
             this.gameOverBoard = this.game.add.group();
@@ -155,6 +163,29 @@ define([
             this.gameOverBoard.visible = true;
 
 
+            //sound
+            this.bounce = this.game.add.audio('bounce'); //sound
+            this.coin = this.game.add.audio('coin');
+            this.splat = this.game.add.audio('splat');
+
+            var boardBounce = this.game.add.tween(this.gameOverBoard);
+            this.gameOverBoard.alpha = 1;
+            boardBounce.from({
+                y: -this.game.world.height,
+
+            }, 1000, Phaser.Easing.Bounce.Out);
+            boardBounce.start();
+
+
+            // add last so is top layer
+            var coinsGraphic = this.game.add.sprite(this.game.width / 2 - 5, 5, 'spritesheet', 'Coin-Collection.png');
+            coinsGraphic.anchor.set(1, 0);
+            this.scoreText = this.game.add.text(this.game.world.centerX + 5, 5, this.score, style);
+            this.scoreText.anchor.set(0, 0);
+
+            this.arrow = this.game.add.sprite(100, 40, 'spritesheet', 'Up-Green.png');
+            this.arrow.anchor.set(0.5, 0.5);
+            this.arrow.kill();
         },
 
 
@@ -164,8 +195,9 @@ define([
             this.scoreText.text = (this.score);
             //this.platformsLeftText.text = "Platforms: " + (this.platformsLeft);
 
-            this.player.restartGame(100, 0);
+
             this.player.animations.play('fly', 10, true);
+            this.baddie2.animations.play('flap', 10, true);
 
 
             this.canPlacePlatform = true;
@@ -200,15 +232,46 @@ define([
             boardBounce.to({
                 alpha: 0
             }, 200, Phaser.Easing.Linear.None);
+            boardBounce.onComplete.addOnce(function() {
+                this.gameOverBoard.visible = false;
+            }, this);
+
             boardBounce.start();
+            this.playerPos = 100;
+
+            this.baddie2.x = -50;
+            var openingTween = this.game.add.tween(this.baddie2).to({
+
+                x: this.game.width-50
+            }, 2000, Phaser.Easing.Cubic.Out, true)
+
+            openingTween.onComplete.addOnce(function() {
+                this.player.restartGame(100, 0);
+                this.chaseTween = this.game.add.tween(this.baddie2).to({
+
+                    x: "-20",
+                    y: "-5"
+                }, 2000, Phaser.Easing.Linear.None, true, 0, 1000, true);
+            }, this);
+            // openingTween.start();
+
+            this.arrow.reset(this.player.x, 40);
+            var openingTween = this.game.add.tween(this.arrow).to({
+
+                alpha: 0
+            }, 150, Phaser.Easing.Cubic.InOut, true, 0, 5, true).onComplete.addOnce(function() {
+                this.arrow.kill()
+            }, this);
 
 
 
+            //this.addBaddie2();
         },
 
         playerGameOver: function() {
             this.player.kill();
             this.baddie.kill();
+            //this.baddie2.kill();
 
             //this.startButton.visible = true;
             this.finalScoreText.visible = true;
@@ -233,12 +296,71 @@ define([
                     localStorage['highscore'] = this.score;
                 }
             }
+
+            this.finalScoreText.visible=true;
             this.finalScoreText.text = " High: " + localStorage['highscore'];
+
+            this.currentLevel=1;
         },
 
-        playerDeath: function() {
+         playerNextLevel: function() {
+            this.player.kill();
+            this.baddie.kill();
+            //this.baddie2.kill();
+
+            //this.startButton.visible = true;
+            this.finalScoreText.visible = true;
+            //this.gameOverBoard.y=-300;
+            this.gameOverBoard.visible = true;
+
+            this.boardText.frameName = 'Stage-Clear.png';
+
+            var boardBounce = this.game.add.tween(this.gameOverBoard);
+            this.gameOverBoard.alpha = 1;
+            boardBounce.from({
+                y: -this.game.world.height,
+
+            }, 1000, Phaser.Easing.Bounce.Out);
+            boardBounce.start();
+
+            this.currentLevel++;
+            this.scrollVelocity = -200 - (this.currentLevel*10);
+
+         
+            this.finalScoreText.visible=false;
+
+            this.groundBG.autoScroll(this.scrollVelocity/2, 0);
+            this.groundFG.autoScroll(this.scrollVelocity, 0);
+        },
+
+        playerDeath: function(winner) {
             // Do not create anymore stuff, event off
-            this.barrierGeneratorEvent.destroy();
+           this.stopGame();
+
+            var deathTween = this.game.add.tween(this.player.body);
+            deathTween.to({
+                y: "-250"
+            }, 1000, Phaser.Easing.Cubic.Out, false, 500);
+
+            deathTween.to({
+                y: this.game.height + 30
+            }, 1000, Phaser.Easing.Cubic.In, true)
+            deathTween.onComplete.addOnce(this.playerGameOver, this);
+
+                this.player.animations.play('killed', 10, false);
+
+                this.chaseTween.stop();
+                var openingTween = this.game.add.tween(this.baddie2).to({
+
+                    x: this.game.width + 50
+                }, 2000, Phaser.Easing.Cubic.Out, true)
+
+                this.splat.play();
+            
+        },
+
+ stopGame: function(){
+ this.barrierGeneratorEvent.destroy();
             this.coinGeneratorEvent.destroy();
             this.difficultyIncrementEvent.destroy();
             // ********* Should this all go in the player class???
@@ -259,24 +381,9 @@ define([
             if (this.playerTween) {
                 this.playerTween.pause();
             }
-            var deathTween = this.game.add.tween(this.player.body);
-            deathTween.to({
-                y: "-250"
-            }, 1000, Phaser.Easing.Cubic.Out, false, 500);
-
-            deathTween.to({
-                y: this.game.height + 30
-            }, 1000, Phaser.Easing.Cubic.In, true)
-            deathTween.onComplete.addOnce(this.playerGameOver, this);
-
-            deathTween.start();
-
-            this.player.animations.play('killed', 10, true);
-            //this.platformsGroup.callAll('kill');
-
-        },
 
 
+ },
         createGameObjects: function() {
             // Coins
             for (var coinsNdx = 0; coinsNdx < 15; coinsNdx++) {
@@ -340,7 +447,9 @@ define([
                         y: tweenYOffset
                     }, this.game.rnd.integerInRange(1000, 2000), "Cubic.easeInOut", true, 0, -1, true);
                 }
-                barrier.body.velocity.x = -200;
+
+
+                barrier.body.velocity.x = this.scrollVelocity;
                 barrier.checkWorldBounds = true;
                 barrier.outOfBoundsKill = true;
                 barrier.body.width = 32;
@@ -353,7 +462,7 @@ define([
             if (coin) {
                 var yOffest = this.game.rnd.integerInRange(this.game.height / 2 - 100, this.game.height / 2 + 100);
 
-                coin.regenerate(this.game.width, yOffest);
+                coin.regenerate(this.game.width, yOffest, this.scrollVelocity);
             }
 
         },
@@ -366,7 +475,7 @@ define([
             if (platform) {
 
                 platform.reset(this.game.input.x, this.game.input.y);
-                platform.body.velocity.x = -200;
+                platform.body.velocity.x = this.scrollVelocity;
                 platform.alpha = 1.0;
 
                 this.canPlacePlatform = false;
@@ -394,9 +503,17 @@ define([
                 coinTween.start();
 
                 obj2.isCollected = true;
+
+                // this.playerPos+=10;
                 //this.score++;
 
-                // this.platformsLeft+=2;
+                var playerAccelerate = this.game.add.tween(this);
+                playerAccelerate.to({
+                    playerPos: "10",
+                }, 500, Phaser.Easing.Linear.None);
+                playerAccelerate.start();
+
+                this.coin.play();
 
 
             }
@@ -423,27 +540,27 @@ define([
                 platform.kill();
 
                 //  Position the emitter where the platform is
-                this.emitter.x = platform.body.x+32;
+                this.emitter.x = platform.body.x + 32;
                 this.emitter.y = platform.body.y;
                 this.emitter.setAlpha(1, 0);
 
                 this.emitter.start(true, 1000, null, 10);
 
+                this.bounce.play();
                 //this.scoreText.text = "Score: " + (++this.score);
             }
         },
 
         addBaddie: function() {
-            this.baddie.reset(this.game.world.width, ((this.game.world.height / 2) - 100));
-
-            this.baddie.body.velocity.x = -75;
-
-            this.game.add.tween(this.baddie).to({
-                y: ((this.game.world.height / 2) + 100),
-                angle: 360
-            }, 2000 - (this.difficulty * 10), Phaser.Easing.Linear.None, true, 0, 1000, true);
+            this.baddie.respawn(this.currentLevel);
 
         },
+
+        /*addBaddie2: function() {
+            this.baddie2.respawn();
+
+
+        },*/
 
         increaseDifficulty: function() {
             this.difficulty++;
@@ -454,23 +571,33 @@ define([
                 case 3:
                     this.addBaddie();
                     break;
+
                 default:
             }
         },
 
 
+        gameWin: function() {
+            this.stopGame();
+                this.player.animations.play('explode', 10, false);
+                this.baddie2.animations.play('explode', 10, false);
+                this.playerNextLevel();
+
+        },
+
         update: function() {
-            this.player.body.x = 100;
+            this.player.body.x = this.playerPos;
 
             if (this.player.alive) {
                 //  Honestly, just about anything could go here. It's YOUR game after all. Eat your heart out!
                 this.game.physics.arcade.collide(this.player, this.platformsGroup, this.platformPlayerCollideHandler, null, this);
                 this.game.physics.arcade.collide(this.player, this.barriersGroup, this.playerDeath, null, this);
                 this.game.physics.arcade.collide(this.player, this.baddie, this.playerDeath, null, this);
+                this.game.physics.arcade.collide(this.player, this.baddie2, this.gameWin, null, this);
                 this.game.physics.arcade.collide(this.player, this.coinsGroup, null, this.collectCoin, this);
 
 
-               // this.playerEmitter.x = this.player.body.x;
+                // this.playerEmitter.x = this.player.body.x;
                 //this.playerEmitter.y = this.player.body.y;
 
 

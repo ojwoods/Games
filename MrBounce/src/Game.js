@@ -142,8 +142,6 @@ define([
             this.infoBoard = this.gameOverBoard.create(this.game.world.centerX, this.game.world.centerY, 'spritesheet', 'Board.png')
             this.infoBoard.anchor.set(0.5, 0.5);
 
-
-
             this.finalScoreText = this.game.add.text(this.game.world.centerX, this.game.world.centerY - 20, "Score: " + this.score, finalStyle);
             this.finalScoreText.anchor.set(0.5, 0);
             this.finalScoreText.visible = false;

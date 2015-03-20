@@ -4301,7 +4301,7 @@ Tilemap.prototype.putTile = function (tile, x, y, layer) {
             this.layers[layer].tiles[y] = {};
         }
 
-        if (tile instanceof Phaser.Tile)
+        if (tile instanceof Tile)
         {
             var idx = (y * this.layers[layer].size.x) + x;
 

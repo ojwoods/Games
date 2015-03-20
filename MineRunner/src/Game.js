@@ -44,25 +44,37 @@ BasicGame.Game.prototype = {
     playerGridRef: 0,
     doMovePlayer: false,
     marker: {},
-    thing:0,
+    thing: 0,
+    lastMineTile: null,
+    greenTile: null,
+    tracksTile: null,
+    roadNdx: 5,
+    weightedRoadDirection: [0, 1, 2, 3, 4],
+    roadTurnValue: 0,
+    lastRowHadTurn: false,
 
 
 
     create: function() {
-
         this.GRID_HEIGHT = (this.stage.height / this.GRIDSIZE);
         this.GRID_WIDTH = (this.stage.width / this.GRIDSIZE);
-        this.PLAYER_TOP_OFFSET = this.GRIDSIZE * 14 + this.GRIDSIZE / 2;
+        this.PLAYER_TOP_OFFSET = this.GRIDSIZE * this.GRID_HEIGHT / 2 + this.GRIDSIZE / 2;
 
-        this.game.stage.backgroundColor = '#2d2d2d';
+        this.game.stage.backgroundColor = '#009900';
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
-        console.log(">>>>>>" + this.stage.height);
+
         this.game.world.setBounds(0, 0, this.stage.width, this.stage.height * 2);
         this.game.camera.y = this.stage.height;
         // this.grid = this.game.add.tileSprite(0, 0, 700, 1000, 'grid');
         //  Creates a blank tilemap
-        this.map = this.game.add.tiledmap('my-tiledmap');
+        this.map = this.game.add.tilemap('terrain');
         this.map.setPreventRecalculate(true);
+        this.map.addTilesetImage('maptiles', 'maptiles');
+
+
+        this.mapLayer1 = this.map.createLayer('Main');
+
+        this.mapLayer1.resizeWorld();
 
         //  Add a Tileset image to the map
         //this.map.addTilesetImage('test', 'grid', this.GRIDSIZE, this.GRIDSIZE);
@@ -101,7 +113,7 @@ BasicGame.Game.prototype = {
 
         this.playerGridRef = this.getGridRef(this.player);
 
-        this.drawNextRow();
+        this.drawNextRow(false);
         this.addMarkerTile();
 
         this.input.onUp.add(this.movePlayer, this);
@@ -126,13 +138,13 @@ BasicGame.Game.prototype = {
 
         if (!this.currentMove.playerMoving) {
             if (this.touchedTile) {
-                if (this.touchedTile.y / 32 < this.playerGridRef.y - 1) {
+                if (this.touchedTile.y < this.playerGridRef.y - 1) {
                     this.moveUp();
-                } else if (this.touchedTile.y / 32 > this.playerGridRef.y - 1) {
+                } else if (this.touchedTile.y > this.playerGridRef.y - 1) {
                     this.moveDown();
-                } else if (this.touchedTile.x / 32 < this.playerGridRef.x - 1) {
+                } else if (this.touchedTile.x < this.playerGridRef.x - 1) {
                     this.moveHorizontal(true);
-                } else if (this.touchedTile.x / 32 > this.playerGridRef.x - 1) {
+                } else if (this.touchedTile.x > this.playerGridRef.x - 1) {
                     this.moveHorizontal(false);
                 }
                 this.touchedTile = null;
@@ -160,29 +172,37 @@ BasicGame.Game.prototype = {
     },
 
     movePlayer: function() {
-        // this.marker.x = this.mapLayer1.getTileX(this.game.input.activePointer.worldX,0) * this.GRIDSIZE;
-        // this.marker.y = this.mapLayer1.getTileY(this.game.input.activePointer.worldY,0) * this.GRIDSIZE;
-        this.touchedTile = this.map.getTileWorldXY(this.game.input.activePointer.worldX, this.game.input.activePointer.worldY, 32, 32, 0);
+        this.marker.x = this.mapLayer1.getTileX(this.game.input.activePointer.worldX, 0) * this.GRIDSIZE;
+        this.marker.y = this.mapLayer1.getTileY(this.game.input.activePointer.worldY, 0) * this.GRIDSIZE;
+        // this.touchedTile = this.map.getTileWorldXY(this.game.input.activePointer.worldX, this.game.input.activePointer.worldY, 32, 32, 0);
 
 
 
-        // this.touchedTile = this.map.getTile(this.mapLayer1.getTileX(this.marker.x), this.mapLayer1.getTileY(this.marker.y), 0);
+        this.touchedTile = this.map.getTile(this.mapLayer1.getTileX(this.marker.x), this.mapLayer1.getTileY(this.marker.y), 0);
     },
 
     moveUp: function() {
-        if (this.game.camera.y === 0) {
+        /* if (this.game.camera.y === 0) {
             this.player.y += this.stage.height;
             this.game.camera.y = this.stage.height;
             this.currentRow = this.getGridRef(this.game.camera).y;
             this.playerGridRef = this.getGridRef(this.player);
             this.drawNextRow();
+        }*/
+        var aboveTile = this.map.getTile(this.playerGridRef.x - 1, this.playerGridRef.y - 2);
+        if (aboveTile.properties.hasOwnProperty("canLayMine") && aboveTile.properties.canLayMine === false) {
+            return;
         }
 
         this.game.add.tween(this.player).to({
 
-            y: "-" + this.GRIDSIZE_STR
-        }, 250, Phaser.Easing.Cubic.InOut, true).onComplete.addOnce(function() {
-            this.drawNextRow();
+            y: "-" + this.GRIDSIZE_STR,
+            angle:0
+        }, 350, Phaser.Easing.Cubic.InOut, true).onComplete.addOnce(function() {
+            this.checkScreenSwap();
+
+            this.drawNextRow(false);
+
             this.currentMove.playerMoving = false;
             if (this.currentMove.screenUp) {
                 this.updateScore();
@@ -194,20 +214,26 @@ BasicGame.Game.prototype = {
         }, this);
         this.currentMove.playerMoving = true;
         this.currentMove.screenDown = false;
-        console.log(this.playerGridRef.relativeY);
-        if (this.playerGridRef.relativeY <= this.GRID_HEIGHT - 3) {
+
+        if (this.playerGridRef.relativeY <= this.GRID_HEIGHT / 2 + 1) {
             this.currentMove.screenUp = true;
 
         }
     },
 
     moveDown: function() {
+        var belowTile = this.map.getTile(this.playerGridRef.x - 1, this.playerGridRef.y);
+        if (belowTile.properties.hasOwnProperty("canLayMine") && belowTile.properties.canLayMine === false) {
+            return;
+        }
+
         if (this.playerGridRef.relativeY <= this.GRID_HEIGHT - 1) {
 
             this.game.add.tween(this.player).to({
 
-                y: this.GRIDSIZE_STR
-            }, 250, Phaser.Easing.Cubic.InOut, true).onComplete.addOnce(function() {
+                y: this.GRIDSIZE_STR,
+                angle: 180
+            }, 350, Phaser.Easing.Cubic.InOut, true).onComplete.addOnce(function() {
                 this.currentMove.playerMoving = false;
                 this.currentMove.screenUp = false;
                 this.currentMove.screenDown = false;
@@ -222,16 +248,25 @@ BasicGame.Game.prototype = {
     },
     moveHorizontal: function(left) {
         var moveVector = 0;
+        var nextTile = null;
+
         if (left) {
+            nextTile = this.map.getTile(this.playerGridRef.x - 2, this.playerGridRef.y - 1);
             moveVector = "-" + this.GRIDSIZE_STR;
         } else {
+            nextTile = this.map.getTile(this.playerGridRef.x, this.playerGridRef.y - 1);
             moveVector = this.GRIDSIZE_STR;
+        }
+
+        if (nextTile.properties.hasOwnProperty("canLayMine") && nextTile.properties.canLayMine === false) {
+            return;
         }
 
         this.game.add.tween(this.player).to({
 
-            x: moveVector
-        }, 250, Phaser.Easing.Cubic.InOut, true).onComplete.addOnce(function() {
+            x: moveVector,
+            angle: 90
+        }, 350, Phaser.Easing.Cubic.InOut, true).onComplete.addOnce(function() {
             this.currentMove.playerMoving = false;
             this.currentMove.screenUp = false;
             this.currentMove.screenDown = false;
@@ -244,6 +279,18 @@ BasicGame.Game.prototype = {
         this.currentMove.screenDown = false;
     },
 
+    checkScreenSwap: function() {
+        if (Phaser.Math.roundTo(this.game.camera.y,0) === 0) {
+            this.drawNextRow(true);
+
+            this.player.y += this.stage.height;
+            this.game.camera.y = this.stage.height;
+            this.currentRow = this.getGridRef(this.game.camera).y;
+            this.playerGridRef = this.getGridRef(this.player);
+            return true;
+        }
+        return false;
+    },
     quitGame: function(pointer) {
 
         //	Here you should destroy anything you no longer need.
@@ -263,38 +310,73 @@ BasicGame.Game.prototype = {
         return gridPosition;
     },
 
-    drawNextRow: function() {
-        console.log("this.currentRow: " + this.currentRow);
+    drawNextRow: function(onlyCopy) {
         // work out which row to paint
-        if (this.currentRow < 0) {
+        /*if (this.currentRow < 0) {
             this.currentRow = this.GRID_HEIGHT;
-        }
-
-        // Crude clear row (temporary)
-        for (var ndx = 0; ndx < this.GRID_WIDTH; ndx++) {
-            var tile = this.map.putTile(85, ndx, this.currentRow - 1, 0);
-            if (tile && tile.properties) {
-                tile.properties.isMine = 0;
+        }*/
+        if (!onlyCopy) {
+            if (!this.lastRowHadTurn) // Prevent 2 turns in a row
+            {
+                this.roadTurnValue = this.game.rnd.weightedPick(this.weightedRoadDirection);
+                this.lastRowHadTurn = true;
             } else {
-                console.log("WHY DOES THIS HAPPEN?!!!!!!*********");
+                this.roadTurnValue = 0;
+                this.lastRowHadTurn = false;
+            }
+            var roadLeft = Phaser.Math.clamp(this.roadNdx - this.roadTurnValue, 0, this.GRID_WIDTH);
+            var roadRight = Phaser.Math.clamp(this.roadNdx + this.roadTurnValue, 0, this.GRID_WIDTH - 1);
+
+            var newRoadNdx = this.game.rnd.between(roadLeft, roadRight);
+
+            roadLeft = Phaser.Math.min(newRoadNdx, this.roadNdx);
+            roadRight = Phaser.Math.max(newRoadNdx, this.roadNdx);
+            console.log(roadLeft, roadRight, this.roadNdx, newRoadNdx);
+            this.roadNdx = newRoadNdx;
+
+            // Crude clear row (temporary)
+            for (var ndx = 0; ndx < this.GRID_WIDTH; ndx++) {
+                // var tile = this.map.getTile(ndx, this.currentRow - 1, 0);
+                //this.map.layers[0].data[this.currentRow - 1][ndx].index = 0;
+                var tileNdx = 2;
+
+                if (ndx >= roadLeft && ndx <= roadRight) {
+                    tileNdx = 1;
+                } else if (this.game.rnd.between(0, 6) == 0) {
+                    tileNdx = 10;
+                }
+                var tile = this.map.putTile(tileNdx, ndx, this.currentRow - 1, 0);
+                //this.map.layers[0].tileIds[tile.ndx]=0;
+
+                if (tile && tile.properties) {
+                    tile.properties.isMine = false;
+
+                    if (tileNdx == 10) {
+                        tile.properties.canLayMine = false;
+                    } else {
+                        tile.properties.canLayMine = true;
+                    }
+                } else {
+                    console.log("1 WHY DOES THIS HAPPEN?!!!!!!*********");
+
+                }
+            }
+            // this.map.layers[0].dirty = true;
+            var xTile = this.game.rnd.between(0, this.GRID_WIDTH - 1);
+            var mineTile = this.map.getTile(xTile, this.currentRow - 1, 0)
+            if (mineTile && mineTile.properties && tile.properties.canLayMine) {
+                mineTile.properties.isMine = true;
+                console.log("set mine to true");
+            } else {
+                console.log("2WHY DOES THIS HAPPEN?!!!!!!*********");
 
             }
+            //this.map.putTile(1, 1, this.currentRow +this.GRID_HEIGHT) ;
         }
-        var xTile = this.game.rnd.integerInRange(1, this.GRID_WIDTH - 1);
-        var mineTile = this.map.putTile(2, xTile, this.currentRow - 1, 0)
-        if (mineTile && mineTile.properties) {
-            mineTile.properties.isMine = this.thing++;
-            console.log("set mine to true");
-        } else {
-            console.log("WHY DOES THIS HAPPEN?!!!!!!*********");
-
-        }
-        //this.map.putTile(1, 1, this.currentRow +this.GRID_HEIGHT) ;
-
         for (ndx = 0; ndx < this.GRID_WIDTH; ndx++) {
             var copyTile = this.map.getTile(ndx, this.currentRow, 0)
             if (copyTile) {
-                  //this.map.putTile(copyTile, ndx, this.currentRow + this.GRID_HEIGHT, 0);
+                this.map.putTile(copyTile, ndx, this.currentRow + this.GRID_HEIGHT, 0);
             }
         }
         // copy new tile to mirror
@@ -306,12 +388,11 @@ BasicGame.Game.prototype = {
     addMarkerTile: function() {
         var mirrorRow = this.playerGridRef.y - 1 + this.GRID_HEIGHT * 2;
 
-        this.map.putTile(0, this.playerGridRef.x - 1, this.playerGridRef.y - 1, 0);
+        this.map.putTile(3 + this.proximityCount, this.playerGridRef.x - 1, this.playerGridRef.y - 1, 0);
 
-        if ((this.playerGridRef.y === this.GRID_HEIGHT) || (this.playerGridRef.y === this.GRID_HEIGHT - 1) || (this.playerGridRef.y === this.GRID_HEIGHT - 2) || (this.playerGridRef.y === this.GRID_HEIGHT - 3)) {
-            this.map.putTile(0, this.playerGridRef.x - 1, this.playerGridRef.y - 1 + this.GRID_HEIGHT, 0);
-        }
-        console.log(this.playerGridRef.relativeY, this.playerGridRef.y);
+        // if ((this.playerGridRef.y === this.GRID_HEIGHT) || (this.playerGridRef.y === this.GRID_HEIGHT - 1) || (this.playerGridRef.y === this.GRID_HEIGHT - 2) || (this.playerGridRef.y === this.GRID_HEIGHT - 3)) {
+        this.map.putTile(3 + this.proximityCount, this.playerGridRef.x - 1, this.playerGridRef.y - 1 + this.GRID_HEIGHT, 0);
+        //}
     },
     updateScore: function() {
         this.score++;
@@ -326,9 +407,6 @@ BasicGame.Game.prototype = {
             for (var yNdx = -2; yNdx < 1; yNdx++) {
                 currentTile = this.map.getTile(this.playerGridRef.x + xNdx, this.playerGridRef.y + yNdx, 0);
                 if (currentTile && currentTile.properties) {
-                    console.log(this.playerGridRef.x + xNdx, this.playerGridRef.y + yNdx, currentTile.properties.isMine);
-
-                    console.dir(currentTile);
                     if (currentTile.properties.isMine) {
                         this.proximityCount++;
                     }
@@ -340,7 +418,6 @@ BasicGame.Game.prototype = {
         currentTile = this.map.getTile(this.playerGridRef.x - 1, this.playerGridRef.y - 1, 0);
 
 
-        console.log(">> " + currentTile);
         if (currentTile.properties && currentTile.properties.isMine) {
             this.collision = true;
         }
@@ -349,6 +426,10 @@ BasicGame.Game.prototype = {
         } else {
             this.proximityText.text = "Proximity: " + this.proximityCount + " - Score: " + this.score;
         }
+    },
+
+    gameOver: function() {
+
     },
 
     /*  updateGridPosition: function(object) {

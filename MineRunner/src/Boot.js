@@ -17,7 +17,6 @@ BasicGame.Boot = function (game) {
 BasicGame.Boot.prototype = {
 
     init: function () {
-        this.game.add.plugin(Phaser.Plugin.Tiled);
 
         this.input.maxPointers = 1;
         this.stage.disableVisibilityChange = true;

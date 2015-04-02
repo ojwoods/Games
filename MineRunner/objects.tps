@@ -20,9 +20,9 @@
         <key>dpi</key>
         <uint>72</uint>
         <key>dataFormat</key>
-        <string>json-array</string>
+        <string>json</string>
         <key>textureFileName</key>
-        <filename>images/maptiles.png</filename>
+        <filename>images/objects.png</filename>
         <key>flipPVR</key>
         <false/>
         <key>ditherType</key>
@@ -40,7 +40,7 @@
             </struct>
         </struct>
         <key>shapePadding</key>
-        <uint>0</uint>
+        <uint>2</uint>
         <key>jpgQuality</key>
         <uint>80</uint>
         <key>pngOptimizationLevel</key>
@@ -50,7 +50,7 @@
         <key>textureFormat</key>
         <enum type="SettingsBase::TextureFormat">png</enum>
         <key>borderPadding</key>
-        <uint>0</uint>
+        <uint>2</uint>
         <key>maxTextureSize</key>
         <QSize>
             <key>width</key>
@@ -70,7 +70,7 @@
         <key>algorithmSettings</key>
         <struct type="AlgorithmSettings">
             <key>algorithm</key>
-            <enum type="AlgorithmSettings::AlgorithmId">Basic</enum>
+            <enum type="AlgorithmSettings::AlgorithmId">MaxRects</enum>
             <key>freeSizeMode</key>
             <enum type="AlgorithmSettings::AlgorithmFreeSizeMode">Best</enum>
             <key>sizeConstraints</key>
@@ -99,7 +99,7 @@
             <key>packageName</key>
             <string>Texture</string>
             <key>javaFileName</key>
-            <filename>../../../../../../m.java</filename>
+            <filename>images/maptiles.java</filename>
             <key>wrap</key>
             <struct type="AndEngineWrap">
                 <key>s</key>
@@ -111,7 +111,7 @@
             <enum type="AndEngine::MagFilter">MagLinear</enum>
         </struct>
         <key>dataFileName</key>
-        <filename>images/maptiles.json</filename>
+        <filename>images/objects.json</filename>
         <key>multiPack</key>
         <false/>
         <key>mainExtension</key>
@@ -148,17 +148,11 @@
         </struct>
         <key>fileList</key>
         <array>
-            <filename>images/dirt.png</filename>
-            <filename>images/grass.png</filename>
-            <filename>images/sand.png</filename>
-            <filename>images/sand1.png</filename>
-            <filename>images/sand2.png</filename>
-            <filename>images/sand3.png</filename>
-            <filename>images/sand4.png</filename>
-            <filename>images/sand5.png</filename>
-            <filename>images/sand6.png</filename>
-            <filename>images/tree1.png</filename>
-            <filename>images/zbomb.png</filename>
+            <filename>images/enemy_barrel.png</filename>
+            <filename>images/enemy_bullet.png</filename>
+            <filename>images/enemy_tank.png</filename>
+            <filename>images/starGold.png</filename>
+            <filename>images/tankBlue.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

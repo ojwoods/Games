@@ -20,7 +20,9 @@ BasicGame.Boot.prototype = {
 
         this.input.maxPointers = 1;
         this.stage.disableVisibilityChange = true;
-
+        Phaser.Canvas.setImageRenderingCrisp(this.game.canvas); //for Canvas, modern approach
+        //Phaser.Canvas.setSmoothingEnabled(this.game.context, false);  //also for Canvas, legacy approach
+        PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST; //for WebGL
       if (this.game.device.desktop) {
                 this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
                 this.scale.setMinMax(260, 480, 768, 1024);

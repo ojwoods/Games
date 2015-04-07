@@ -192,7 +192,7 @@ BasicGame.Game.prototype = {
             }
         }, this);
 
-        this.game.physics.arcade.overlap(this.bullets, this.player, this.gameOver, null, this);
+        this.game.physics.arcade.overlap(this.enemyBullets, this.player, this.gameOver, null, this);
 
         for (var i = 0; i < this.enemies.length; i++) {
             if (this.enemies[i].alive) {

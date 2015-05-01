@@ -26,7 +26,7 @@ var cacheKey = Phaser.Plugin.Tiled.utils.cacheKey;
 		//	As this is just a Project Template I've not provided these assets, the lines below won't work as the files themselves will 404, they are just an example of use.
 		this.load.image('maptiles', 'images/maptiles.png');
 		this.load.atlasJSONHash('objectsSpritesheet', 'images/objects.png', 'images/objects.json');
-		this.load.tilemap('terrain', 'terrain.json', null, Phaser.Tilemap.TILED_JSON);
+		this.load.tilemap('terrain', 'terrain2.json', null, Phaser.Tilemap.TILED_JSON);
 
 
 		//this.load.atlas('playButton', 'images/play_button.png', 'images/play_button.json');

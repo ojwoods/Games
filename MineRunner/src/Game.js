@@ -25,6 +25,7 @@ BasicGame.Game = function(game) {
 
 BasicGame.Game.prototype = {
     GRIDSIZE: 32,
+    GRIDSIZE2: 16,
     GRIDSIZE_STR: "32",
     GRID_HEIGHT: 8,
     GRID_WIDTH: 6,
@@ -37,6 +38,7 @@ BasicGame.Game.prototype = {
     mapLayer1: null,
     cursors: null,
     player: null,
+    playerInvincible: false,
     currentMove: {},
     proximityCount: 0,
     score: 0,
@@ -55,9 +57,14 @@ BasicGame.Game.prototype = {
     lastRowHadTurn: false,
     collectablesGroup: null,
     difficultyLevel: 0,
-    currentRow: 0,
     enemyBullets: null,
-    enemies: null,
+    enemiesGroup: null,
+    enemyTanksGroup: null,
+    powerUpsGroup: null,
+    bombsGroup: null,
+    //enemyBomber: null,
+    enemyBomberGroup: null,
+    actorsGroup: null,
 
 
 
@@ -65,7 +72,7 @@ BasicGame.Game.prototype = {
         this.GAME_HEIGHT = this.stage.height;
         this.GRID_HEIGHT = (this.GAME_HEIGHT / this.GRIDSIZE);
         this.GRID_WIDTH = (this.stage.width / this.GRIDSIZE);
-        this.PLAYER_TOP_OFFSET = this.GRIDSIZE * this.GRID_HEIGHT / 2 + this.GRIDSIZE / 2;
+        this.PLAYER_TOP_OFFSET = this.GRIDSIZE * ((this.GRID_HEIGHT / 3) * 2) + this.GRIDSIZE / 2;
 
         this.game.stage.backgroundColor = '#009900';
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -95,14 +102,7 @@ BasicGame.Game.prototype = {
 
         // Setup the player
         this.cursors = this.game.input.keyboard.createCursorKeys();
-        this.player = this.game.add.sprite(((this.GRID_WIDTH / 2) * this.GRIDSIZE) + this.GRIDSIZE / 2, this.GAME_HEIGHT + this.PLAYER_TOP_OFFSET, 'objectsSpritesheet', 'tankBlue.png');
-        this.player.anchor.setTo(0.5, 0.5);
-
-        this.game.physics.arcade.enable(this.player);
-        this.player.immovable = true;
-
-        this.collectablesGroup = this.game.add.group();
-
+        this.player = new Player(this.game, ((this.GRID_WIDTH / 2) * this.GRIDSIZE) + this.GRIDSIZE / 2, this.GAME_HEIGHT + this.PLAYER_TOP_OFFSET);
 
         this.createGameObjects();
 
@@ -125,7 +125,7 @@ BasicGame.Game.prototype = {
 
         this.playerGridRef = this.getGridRef(this.player);
 
-        this.drawNextRow(false);
+        //this.drawNextRow(false);
         this.addMarkerTile();
 
         this.input.onUp.add(this.movePlayer, this);
@@ -137,7 +137,19 @@ BasicGame.Game.prototype = {
     startGame: function() {
         this.collectablesGroup.callAll('kill');
         this.difficultyLevel = 0;
-        this.currentRow = 0;
+        this.enemyBomberGroup.callAll("setAlive", false);
+        // generate terrain for first screen
+        roadNdx = this.getGridRef(this.player).x;
+        for (this.currentRow = this.getGridRef(this.player).y - 2; this.currentRow > this.getGridRef(this.game.camera).y - 1; this.currentRow--) {
+            this.drawNextRow(false);
+        }
+        this.enemyBomberGroup.callAll("setAlive", false);
+
+        this.updateProximityCount();
+
+        this.showBombs2();
+        playerInvincible = false;
+
     },
 
 
@@ -151,6 +163,7 @@ BasicGame.Game.prototype = {
         }*/
 
         this.game.physics.arcade.collide(this.player, this.collectablesGroup, this.collectableCollisionHandler, this.collectableCollisionHandler, this);
+        this.game.physics.arcade.collide(this.player, this.powerUpsGroup, this.powerUpCollisionHandler, this.powerUpCollisionHandler, this);
 
 
         this.currentRow = this.getGridRef(this.game.camera).y;
@@ -194,14 +207,20 @@ BasicGame.Game.prototype = {
 
         this.game.physics.arcade.overlap(this.enemyBullets, this.player, this.gameOver, null, this);
 
-        for (var i = 0; i < this.enemies.length; i++) {
-            if (this.enemies[i].alive) {
-                //game.physics.arcade.overlap(bullets, enemies[i].tank, bulletHitEnemy, null, this);
-                this.enemies[i].update();
+        this.enemyTanksGroup.forEach(function(enemy) {
+            // Update alpha first.
+            if (enemy.alive) {
+                enemy.update();
             }
-        }
-
+        }, this);
+        this.enemyBomberGroup.forEach(function(enemy) {
+            // Update alpha first.
+            if (enemy.alive) {
+                enemy.update();
+            }
+        }, this);
     },
+
     render: function() {
 
         // this.game.debug.cameraInfo(this.game.camera, 0, 32);
@@ -241,6 +260,7 @@ BasicGame.Game.prototype = {
             this.checkScreenSwap();
 
             this.drawNextRow(false);
+            this.showEnemyTank();
 
             this.currentMove.playerMoving = false;
             if (this.currentMove.screenUp) {
@@ -257,10 +277,12 @@ BasicGame.Game.prototype = {
         this.currentMove.playerMoving = true;
         this.currentMove.screenDown = false;
 
-        if (this.playerGridRef.relativeY <= this.GRID_HEIGHT / 2 + 1) {
+        if (this.playerGridRef.relativeY <= ((this.GRID_HEIGHT / 3) * 2) + 1) {
             this.currentMove.screenUp = true;
 
         }
+
+        this.showBaddies();
     },
 
     moveDown: function() {
@@ -287,6 +309,8 @@ BasicGame.Game.prototype = {
             this.currentMove.screenUp = false;
             this.currentMove.screenDown = true;
         }
+
+        this.showBaddies();
     },
     moveHorizontal: function(left) {
         var moveVector = 0;
@@ -321,18 +345,37 @@ BasicGame.Game.prototype = {
         this.currentMove.playerMoving = true;
         this.currentMove.screenUp = false;
         this.currentMove.screenDown = false;
+
+        this.showBaddies();
     },
 
     checkScreenSwap: function() {
         if (Phaser.Math.roundTo(this.game.camera.y, 0) === 0) {
             this.drawNextRow(true);
+            this.swapAllObjects(this.actorsGroup);
+            // this.player.y += this.GAME_HEIGHT;
 
-            this.player.y += this.GAME_HEIGHT;
+            /* this.actorsGroup.forEach(function(item) {
+                if (item.type === Phaser.GROUP) {
+                    item.forEach(function(item2) {
+                        if (item2.alive && item2.y < this.GAME_HEIGHT) {
+                            console.log("Moving item2 from " + item2.y);
+
+                            item2.y += this.GAME_HEIGHT;
+                        }
+                    }, this);
+                } else if (item.alive && item.y < this.GAME_HEIGHT) {
+                    console.log("Moving item from " + item.y);
+
+                    item.y += this.GAME_HEIGHT;
+                }
+            }, this);
+
+            this.enemyBomberGroup.setAll(y, )*/
             this.game.camera.y = this.GAME_HEIGHT;
             this.currentRow = this.getGridRef(this.game.camera).y;
             this.playerGridRef = this.getGridRef(this.player);
-
-            this.collectablesGroup.forEach(function(item) {
+            /* this.collectablesGroup.forEach(function(item) {
                 // Update alpha first.
                 if (item.alive && item.y < this.GAME_HEIGHT) {
                     console.log("Moving star from " + item.y);
@@ -340,9 +383,32 @@ BasicGame.Game.prototype = {
                     item.y += this.GAME_HEIGHT;
                 }
             }, this);
-            return true;
+            this.enemyBullets.forEach(function(item) {
+                // Update alpha first.
+                if (item.alive && item.y < this.GAME_HEIGHT) {
+                    console.log("Moving bullet from " + item.y);
+
+                    item.y += this.GAME_HEIGHT;
+                }
+            }, this);
+            return true;*/
         }
         return false;
+    },
+
+    swapAllObjects: function(group) {
+        for (var i = 0; i < group.children.length; i++) {
+            if ((group.children[i].alive)) {
+                if (group.children[i] instanceof Phaser.Group) {
+                    this.swapAllObjects(group.children[i]);
+                } else {
+                    console.log("Moving item from " + group.children[i].y);
+                    if (group.children[i].y < this.GAME_HEIGHT) {
+                        group.children[i].y += this.GAME_HEIGHT;
+                    }
+                }
+            }
+        }
     },
     quitGame: function(pointer) {
 
@@ -415,7 +481,7 @@ BasicGame.Game.prototype = {
             }
             // this.map.layers[0].dirty = true;
             var xTile = this.game.rnd.between(0, this.GRID_WIDTH - 1);
-            var mineTile = this.map.getTile(xTile, this.currentRow - 1, 0)
+            var mineTile = this.map.getTile(xTile, this.currentRow - 1, 0);
             if (mineTile && mineTile.properties && mineTile.properties.canLayMine) {
                 mineTile.properties.isMine = true;
             } else {
@@ -424,24 +490,16 @@ BasicGame.Game.prototype = {
             }
             //this.map.putTile(1, 1, this.currentRow +this.GRID_HEIGHT) ;
         }
-        for (var ndx = 0; ndx < this.GRID_WIDTH; ndx++) {
-            var copyTile = this.map.getTile(ndx, this.currentRow, 0)
+        for (var ndx2 = 0; ndx2 < this.GRID_WIDTH; ndx2++) {
+            var copyTile = this.map.getTile(ndx2, this.currentRow, 0);
             if (copyTile) {
-                this.map.putTile(copyTile, ndx, this.currentRow + this.GRID_HEIGHT, 0);
+                this.map.putTile(copyTile, ndx2, this.currentRow + this.GRID_HEIGHT, 0);
             }
         }
 
-        // Show Objects
-        var collectable = this.collectablesGroup.getFirstExists(false);
-        var randomBonus = this.game.rnd.between(0, 5);
-
-        if (collectable && randomBonus === 0) {
-            collectable.reset((this.game.rnd.between(0, this.GRID_WIDTH) * this.GRIDSIZE) + this.GRID_WIDTH / 2, this.camera.y - this.GRIDSIZE / 2);
-            collectable.revive();
-            console.log("Adding new star " + collectable.x, collectable.y);
-        }
 
 
+        this.showCollectable();
 
         // copy new tile to mirror
         //var cloneRow = this.map.copy(0, this.currentRow, 2, 1);
@@ -512,17 +570,71 @@ BasicGame.Game.prototype = {
         }
         this.mapLayer1.dirty = true;
     },
-    gameOver: function() {
-        this.proximityText.text = "GAME OVER";
-        this.player.kill();
-        this.showBombs();
+    showBombs2: function() {
+        var currentTile = null;
 
-        setTimeout(function() {
-            location.reload()
-        }, 3000)
+        for (var yNdx = 0; yNdx < this.GRID_HEIGHT * 2; yNdx++) {
+            for (var xNdx = 0; xNdx < this.GRID_WIDTH; xNdx++) {
+                currentTile = this.map.getTile(xNdx, yNdx, 0);
+                if (currentTile.properties && currentTile.properties.isMine) {
+                    //currentTile.index = 11;
+                    var bomb = this.bombsGroup.getFirstDead();
+                    if (!bomb) {
+                        bomb = new Bomb(this.game, currentTile.worldX + this.GRIDSIZE2, currentTile.worldY + this.GRIDSIZE2);
+
+                        this.game.add.existing(bomb);
+                        this.bombsGroup.add(bomb);
+                    } else {
+                        bomb.reset(currentTile.worldX + this.GRIDSIZE2, currentTile.worldY + this.GRIDSIZE2);
+                    }
+                    bomb.alpha = 0;
+
+                    // Flash the alpha a few times
+                    this.game.add.tween(bomb).to({
+                        alpha: 1
+                    }, 300, Phaser.Easing.Cubic.InOut, true, 0, 3, true).onComplete.addOnce(function() {
+                        this.kill();
+                    }, bomb);
+
+                }
+            }
+        }
+        this.mapLayer1.dirty = true;
+    },
+    invinciblityPowerUp: function() {
+        playerInvincible = true;
+        this.game.add.tween(this.player).to({
+            alpha: 0
+        }, 300, Phaser.Easing.Cubic.InOut, true, 0, 10, true).onComplete.addOnce(function() {
+            this.playerInvincible = false;
+        }, this);
+    },
+    gameOver: function() {
+        if (this.playerInvincible) {
+            return;
+        }
+        this.proximityText.text = "GAME OVER";
+
+        this.player.setDead(function() {
+             this.player.kill();
+
+            this.showBombs2();
+
+            setTimeout(function() {
+                location.reload();
+            }, 3000);
+        }, this);
+
 
     },
     createGameObjects: function() {
+
+        this.collectablesGroup = this.game.add.group();
+        this.actorsGroup = this.game.add.group();
+        this.bombsGroup = this.game.add.group();
+        this.powerUpsGroup = this.game.add.group();
+
+
         //  The enemies bullet group
         this.enemyBullets = this.game.add.group();
         this.enemyBullets.enableBody = true;
@@ -536,25 +648,116 @@ BasicGame.Game.prototype = {
 
         // Bonus collectables
         for (var starsNdx = 0; starsNdx < 5; starsNdx++) {
-            var star = this.game.add.sprite(-100, -100, 'objectsSpritesheet', 'starGold.png');
+            var star = this.game.add.sprite(-100, -100, 'objectsSpritesheet', 'person.png');
             star.anchor.setTo(0.5, 0.5);
+            star.animations.add('wave', [
+                'person.png',
+                'person2.png'
+
+            ], 50, true, false);
+
+            star.animations.play('wave', 5, true);
 
             this.collectablesGroup.add(star);
             star.immovable = true;
             this.game.physics.arcade.enableBody(star);
+        }
+
+        // Bonus collectables
+        for (var powerUpsNdx = 0; powerUpsNdx < 5; powerUpsNdx++) {
+            var powerUp = new PowerUp(this.game, -100, -100);
+
+            this.powerUpsGroup.add(powerUp);
 
         }
 
         //  Create some baddies to waste :)
-        this.enemies = [];
-        this.enemies.push(new EnemyTank(this.game, this.player, this.enemyBullets));
+        this.enemyBomberGroup = this.game.add.group();
+        this.enemiesGroup = this.game.add.group();
+        this.enemyTanksGroup = this.game.add.group();
+        this.enemyBomberGroup.add(new EnemyBomber(this.game, this.player));
 
+        for (var ndx = 0; ndx < 3; ndx++) {
+            this.enemyTanksGroup.add(new EnemyTank(this.game, this.player, this.enemyBullets));
+        }
+
+
+        this.actorsGroup.add(this.collectablesGroup);
+        this.actorsGroup.add(this.enemyBullets);
+        this.actorsGroup.add(this.player);
+        this.actorsGroup.add(this.enemyTanksGroup);
+        this.actorsGroup.add(this.enemyBomberGroup);
     },
 
     collectableCollisionHandler: function(player, collectable) {
         collectable.kill();
         this.updateScore();
-    }
+    },
+    powerUpCollisionHandler: function(player, collectable) {
+        collectable.kill();
+
+        switch (collectable.type) {
+            case PowerUp.VIEW_BOMBS:
+                this.showBombs2();
+                break;
+            case PowerUp.PREVIEW:
+                this.invinciblityPowerUp();
+                break;
+        }
+    },
+
+    showBaddies: function() {
+        /* Trigger Bomber ? */
+        var showBomber = this.game.rnd.between(0, 5);
+        if (showBomber === 0) {
+            var newBomber = this.enemyBomberGroup.getFirstDead();
+            if (newBomber) {
+                newBomber.fire(this.game.camera.y, this.GRID_WIDTH, this.GRID_HEIGHT, this.GRIDSIZE);
+            }
+        }
+    },
+
+    showEnemyTank: function() {
+        var showTank = this.game.rnd.between(0, 5);
+        if (showTank === 0) {
+            var newTank = this.enemyTanksGroup.getFirstDead();
+            if (newTank) {
+                newTank.start(this.game.camera.y, this.GRID_WIDTH, this.GRID_HEIGHT, this.GRIDSIZE);
+            }
+        }
+    },
+
+    showCollectable: function() {
+        // Show Objects
+        var randomBonus = this.game.rnd.between(0, 10);
+
+
+        var bonusX = this.game.rnd.between(0, this.GRID_WIDTH - 1);
+        var bonusTile = this.map.getTile(bonusX, this.currentRow - 1, 0);
+        if (bonusTile && bonusTile.properties && bonusTile.properties.canLayMine && !bonusTile.properties.isMine) {
+            switch (randomBonus) {
+                case 0:
+                    var collectable = this.collectablesGroup.getFirstDead(false);
+
+                    collectable.reset((bonusX * this.GRIDSIZE) + this.GRIDSIZE / 2, ((this.currentRow - 1) * this.GRIDSIZE) + this.GRIDSIZE / 2);
+                    collectable.revive();
+                    break;
+                case 1:
+                    var powerUp = this.powerUpsGroup.getFirstDead(false);
+                    if (powerUp) {
+                        powerUp.reset((bonusX * this.GRIDSIZE) + this.GRIDSIZE / 2, ((this.currentRow - 1) * this.GRIDSIZE) + this.GRIDSIZE / 2);
+                        powerUp.revive();
+                        powerUp.setRandomType();
+                    }
+                    break;
+                case 2:
+                    break;
+            }
+
+
+        }
+    },
+
     /*  updateGridPosition: function(object) {
         if (!object.gridPosition) {
             object.gridPosition = {};

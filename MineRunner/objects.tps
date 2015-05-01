@@ -153,6 +153,18 @@
             <filename>images/enemy_tank.png</filename>
             <filename>images/starGold.png</filename>
             <filename>images/tankBlue.png</filename>
+            <filename>images/person.png</filename>
+            <filename>images/person2.png</filename>
+            <filename>images/Enemy.png</filename>
+            <filename>images/flat_medal1.png</filename>
+            <filename>images/flat_medal7.png</filename>
+            <filename>images/bomb-warn.png</filename>
+            <filename>images/smokeGrey0.png</filename>
+            <filename>images/smokeGrey1.png</filename>
+            <filename>images/smokeGrey2.png</filename>
+            <filename>images/smokeGrey3.png</filename>
+            <filename>images/smokeGrey4.png</filename>
+            <filename>images/smokeGrey5.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

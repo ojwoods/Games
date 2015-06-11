@@ -24,6 +24,7 @@ define([
         this.finalScoreText = null;
         this.infoBoard = null;
         this.boardText = null;
+        this.buttonClick = null;
 
         this.gameOverBoard = null
 
@@ -61,7 +62,7 @@ define([
                 align: "center"
             };
 
-
+this.buttonClick = this.game.add.audio('button');
             // Ground
             this.groundBG = this.game.add.tileSprite(0, this.game.world.height - 80, this.game.world.width, 64, 'spritesheet', 'ground2.png');
             this.groundFG = this.game.add.tileSprite(0, this.game.world.height - 64, this.game.world.width, 64, 'spritesheet', 'ground.png');
@@ -106,6 +107,7 @@ define([
 
 
         restartGame: function() {
+            this.buttonClick.play();
             this.state.start('Game');
 
 

@@ -113,9 +113,21 @@ BasicGame.Game.prototype = {
             fill: "#fff",
             align: "center"
         };
-        this.proximityText = this.game.add.text(this.game.world.centerX, 20, "Proximity: " + this.proximityCount + " - Score: " + this.score, proximityStyle);
+        var scoreStyle = {
+            font: "25px Arial",
+            fill: "#fff",
+            align: "center"
+        };
+
+        var bottomOfScreenY = (window.innerHeight * this.game.scale.scaleFactor.y);
+
+        this.proximityText = this.game.add.text(this.game.world.centerX, 30, "Adjacent mines: " + this.proximityCount, proximityStyle);
         this.proximityText.anchor.set(0.5, 0);
         this.proximityText.fixedToCamera = true;
+
+        this.scoreText = this.game.add.text(this.game.world.centerX, 10, "Score: " + this.score, scoreStyle);
+        this.scoreText.anchor.set(0.5, 0);
+        this.scoreText.fixedToCamera = true;
 
         this.currentRow = this.getGridRef(this.game.camera).y;
 
@@ -137,22 +149,19 @@ BasicGame.Game.prototype = {
     startGame: function() {
         this.collectablesGroup.callAll('kill');
         this.difficultyLevel = 0;
-        this.enemyBomberGroup.callAll("setAlive", false);
+        // this.enemyBomberGroup.callAll("setAlive", false);
         // generate terrain for first screen
         roadNdx = this.getGridRef(this.player).x;
         for (this.currentRow = this.getGridRef(this.player).y - 2; this.currentRow > this.getGridRef(this.game.camera).y - 1; this.currentRow--) {
             this.drawNextRow(false);
         }
-        this.enemyBomberGroup.callAll("setAlive", false);
+        //this.enemyBomberGroup.callAll("setAlive", false);
 
         this.updateProximityCount();
 
         this.showBombs2();
         playerInvincible = false;
-
     },
-
-
 
     update: function() {
         /*  if (this.cursors.up.isDown) {
@@ -169,7 +178,7 @@ BasicGame.Game.prototype = {
         this.currentRow = this.getGridRef(this.game.camera).y;
         this.playerGridRef = this.getGridRef(this.player);
 
-        if (!this.currentMove.playerMoving) {
+        if (!this.currentMove.playerMoving && this.player.alive) {
             if (this.touchedTile) {
                 if (this.touchedTile.y < this.playerGridRef.y - 1) {
                     this.moveUp();
@@ -205,7 +214,9 @@ BasicGame.Game.prototype = {
             }
         }, this);
 
-        this.game.physics.arcade.overlap(this.enemyBullets, this.player, this.gameOver, null, this);
+        if (!this.playerInvincible) {
+            this.game.physics.arcade.overlap(this.enemyBullets, this.player, this.gameOver, null, this);
+        }
 
         this.enemyTanksGroup.forEach(function(enemy) {
             // Update alpha first.
@@ -296,7 +307,7 @@ BasicGame.Game.prototype = {
             this.game.add.tween(this.player).to({
 
                 y: this.GRIDSIZE_STR,
-                angle: 180
+                angle: -180
             }, 350, Phaser.Easing.Cubic.InOut, true).onComplete.addOnce(function() {
                 this.currentMove.playerMoving = false;
                 this.currentMove.screenUp = false;
@@ -320,7 +331,7 @@ BasicGame.Game.prototype = {
         if (left) {
             nextTile = this.map.getTile(this.playerGridRef.x - 2, this.playerGridRef.y - 1, 0);
             moveVector = "-" + this.GRIDSIZE_STR;
-            tweenAngle = 270;
+            tweenAngle = -90;
         } else {
             nextTile = this.map.getTile(this.playerGridRef.x, this.playerGridRef.y - 1, 0);
             moveVector = this.GRIDSIZE_STR;
@@ -459,7 +470,7 @@ BasicGame.Game.prototype = {
                 var tileNdx = 2;
 
                 if (ndx >= roadLeft && ndx <= roadRight) {
-                    tileNdx = 1;
+                    tileNdx = 12;
                 } else if (this.game.rnd.between(0, 6) === 0) {
                     tileNdx = 10;
                 }
@@ -474,19 +485,19 @@ BasicGame.Game.prototype = {
                     } else {
                         tile.properties.canLayMine = true;
                     }
-                } else {
-                    console.log("1 WHY DOES THIS HAPPEN?!!!!!!*********");
-
                 }
             }
             // this.map.layers[0].dirty = true;
-            var xTile = this.game.rnd.between(0, this.GRID_WIDTH - 1);
-            var mineTile = this.map.getTile(xTile, this.currentRow - 1, 0);
-            if (mineTile && mineTile.properties && mineTile.properties.canLayMine) {
-                mineTile.properties.isMine = true;
-            } else {
-                console.log("2WHY DOES THIS HAPPEN?!!!!!!*********");
-
+            var chanceOfMine = 0;
+            if (this.difficultyLevel < 10) {
+                chanceOfMine = this.game.rnd.between(0, 1);
+            }
+            if (chanceOfMine === 0) {
+                var xTile = this.game.rnd.between(0, this.GRID_WIDTH - 1);
+                var mineTile = this.map.getTile(xTile, this.currentRow - 1, 0);
+                if (mineTile && mineTile.properties && mineTile.properties.canLayMine) {
+                    mineTile.properties.isMine = true;
+                }
             }
             //this.map.putTile(1, 1, this.currentRow +this.GRID_HEIGHT) ;
         }
@@ -521,13 +532,14 @@ BasicGame.Game.prototype = {
     },
     updateScore: function() {
         this.score++;
-        this.proximityText.text = "Proximity: " + this.proximityCount + " - Score: " + this.score;
+        this.scoreText.text = "Score: " + this.score;
 
     },
     updateDifficultyLevel: function() {
-        if (this.currentRow < 5) {
-            this.difficultyLevel = 1;
-        }
+        //if (this.currentRow < 5) {
+        //     this.difficultyLevel = 1;
+        //}
+        this.difficultyLevel++;
     },
     updateProximityCount: function() {
         this.proximityCount = 0;
@@ -554,7 +566,17 @@ BasicGame.Game.prototype = {
         if (this.collision) {
             this.gameOver();
         } else {
-            this.proximityText.text = "Proximity: " + this.proximityCount + " - Score: " + this.score;
+            this.proximityText.text = "Adjacent Mines: " + this.proximityCount;
+        }
+        this.proximityText.scale.x = 1;
+        this.proximityText.scale.y = 1;
+
+        if (this.proximityCount > 0) {
+            this.game.add.tween(this.proximityText.scale).to({
+
+                x: 1.1,
+                y: 0.8
+            }, 200, Phaser.Easing.Cubic.InOut, true, 0, 1, true)
         }
     },
     showBombs: function() {
@@ -602,7 +624,7 @@ BasicGame.Game.prototype = {
         this.mapLayer1.dirty = true;
     },
     invinciblityPowerUp: function() {
-        playerInvincible = true;
+        this.playerInvincible = true;
         this.game.add.tween(this.player).to({
             alpha: 0
         }, 300, Phaser.Easing.Cubic.InOut, true, 0, 10, true).onComplete.addOnce(function() {
@@ -616,7 +638,7 @@ BasicGame.Game.prototype = {
         this.proximityText.text = "GAME OVER";
 
         this.player.setDead(function() {
-             this.player.kill();
+            this.player.kill();
 
             this.showBombs2();
 
@@ -708,7 +730,7 @@ BasicGame.Game.prototype = {
 
     showBaddies: function() {
         /* Trigger Bomber ? */
-        var showBomber = this.game.rnd.between(0, 5);
+        var showBomber = this.game.rnd.between(0, 20-this.difficultyLevel);
         if (showBomber === 0) {
             var newBomber = this.enemyBomberGroup.getFirstDead();
             if (newBomber) {
@@ -718,7 +740,7 @@ BasicGame.Game.prototype = {
     },
 
     showEnemyTank: function() {
-        var showTank = this.game.rnd.between(0, 5);
+        var showTank = this.game.rnd.between(0, 20-this.difficultyLevel);
         if (showTank === 0) {
             var newTank = this.enemyTanksGroup.getFirstDead();
             if (newTank) {
@@ -753,8 +775,6 @@ BasicGame.Game.prototype = {
                 case 2:
                     break;
             }
-
-
         }
     },
 

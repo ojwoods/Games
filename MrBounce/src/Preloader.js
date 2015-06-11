@@ -40,6 +40,7 @@ define([
             this.game.load.audio('bounce', ['assets/bounce.mp3']);
             this.game.load.audio('coin', ['assets/collectBonus.mp3']);
             this.game.load.audio('splat', ['assets/wrong.mp3']);
+            this.game.load.audio('button', ['assets/button.mp3']);
 
         },
 

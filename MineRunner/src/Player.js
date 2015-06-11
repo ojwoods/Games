@@ -9,6 +9,7 @@ Player = function(game, x, y) {
     this.game = game;
     this.immovable = true;
 
+
     this.anim = this.animations.add('death', [
         'smokeGrey0.png',
         'smokeGrey1.png',
@@ -32,7 +33,7 @@ Player.prototype.constructor = Player;
 Player.prototype.setDead = function(callback, context)
 {
  // play animation
- 
+ this.alive=false;
     this.anim.onComplete.addOnce(callback, context);
 
  

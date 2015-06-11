@@ -26,6 +26,7 @@ define([
         this.finalScoreText = null;
         this.infoBoard = null;
         this.boardText = null;
+        this.helpText
 
         this.gameOverBoard = null
 
@@ -37,6 +38,7 @@ define([
         this.bounce = null;
         this.coin = null;
         this.splat = null;
+        this.buttonClick = null;
 
 
         this.barrierGeneratorEvent = null;
@@ -154,7 +156,7 @@ define([
             this.boardText.anchor.set(0.5, 0);
 
 
-            this.startButton = this.game.add.button(this.game.world.centerX, 350, 'play', this.restartGame, this);
+            this.startButton = this.game.add.button(this.game.world.centerX, 350, 'play', this.startButtonEvent, this);
             this.startButton.anchor.set(0.5, 0);
 
             this.gameOverBoard.add(this.startButton);
@@ -165,6 +167,7 @@ define([
             this.bounce = this.game.add.audio('bounce'); //sound
             this.coin = this.game.add.audio('coin');
             this.splat = this.game.add.audio('splat');
+            this.buttonClick = this.game.add.audio('button');
 
             var boardBounce = this.game.add.tween(this.gameOverBoard);
             this.gameOverBoard.alpha = 1;
@@ -186,6 +189,10 @@ define([
             this.arrow.kill();
         },
 
+        startButtonEvent: function() {
+            this.buttonClick.play();
+            this.restartGame();
+        },
 
         restartGame: function() {
             this.score = 0;
@@ -240,7 +247,7 @@ define([
             this.baddie2.x = -50;
             var openingTween = this.game.add.tween(this.baddie2).to({
 
-                x: this.game.width-50
+                x: this.game.width - 50
             }, 2000, Phaser.Easing.Cubic.Out, true)
 
             openingTween.onComplete.addOnce(function() {
@@ -248,7 +255,7 @@ define([
                 this.chaseTween = this.game.add.tween(this.baddie2).to({
 
                     x: "-20",
-                    y: "-5"
+                    y: "-30"
                 }, 2000, Phaser.Easing.Linear.None, true, 0, 1000, true);
             }, this);
             // openingTween.start();
@@ -295,13 +302,13 @@ define([
                 }
             }
 
-            this.finalScoreText.visible=true;
+            this.finalScoreText.visible = true;
             this.finalScoreText.text = " High: " + localStorage['highscore'];
 
-            this.currentLevel=1;
+            this.currentLevel = 1;
         },
 
-         playerNextLevel: function() {
+        playerNextLevel: function() {
             this.player.kill();
             this.baddie.kill();
             //this.baddie2.kill();
@@ -322,18 +329,18 @@ define([
             boardBounce.start();
 
             this.currentLevel++;
-            this.scrollVelocity = -200 - (this.currentLevel*10);
+            this.scrollVelocity = -200 - (this.currentLevel * 10);
 
-         
-            this.finalScoreText.visible=false;
 
-            this.groundBG.autoScroll(this.scrollVelocity/2, 0);
+            this.finalScoreText.visible = false;
+
+            this.groundBG.autoScroll(this.scrollVelocity / 2, 0);
             this.groundFG.autoScroll(this.scrollVelocity, 0);
         },
 
         playerDeath: function(winner) {
             // Do not create anymore stuff, event off
-           this.stopGame();
+            this.stopGame();
 
             var deathTween = this.game.add.tween(this.player.body);
             deathTween.to({
@@ -345,20 +352,20 @@ define([
             }, 1000, Phaser.Easing.Cubic.In, true)
             deathTween.onComplete.addOnce(this.playerGameOver, this);
 
-                this.player.animations.play('killed', 10, false);
+            this.player.animations.play('killed', 10, false);
 
-                this.chaseTween.stop();
-                var openingTween = this.game.add.tween(this.baddie2).to({
+            this.chaseTween.stop();
+            var openingTween = this.game.add.tween(this.baddie2).to({
 
-                    x: this.game.width + 50
-                }, 2000, Phaser.Easing.Cubic.Out, true)
+                x: this.game.width + 50
+            }, 2000, Phaser.Easing.Cubic.Out, true)
 
-                this.splat.play();
-            
+            this.splat.play();
+
         },
 
- stopGame: function(){
- this.barrierGeneratorEvent.destroy();
+        stopGame: function() {
+            this.barrierGeneratorEvent.destroy();
             this.coinGeneratorEvent.destroy();
             this.difficultyIncrementEvent.destroy();
             // ********* Should this all go in the player class???
@@ -381,7 +388,7 @@ define([
             }
 
 
- },
+        },
         createGameObjects: function() {
             // Coins
             for (var coinsNdx = 0; coinsNdx < 15; coinsNdx++) {
@@ -455,14 +462,20 @@ define([
         },
 
         generateCoins: function() {
-            var coin = this.coinsGroup.getFirstExists(false);
+            var coin = this.coinsGroup.getFirstDead();
 
             if (coin) {
                 var yOffest = this.game.rnd.integerInRange(this.game.height / 2 - 100, this.game.height / 2 + 100);
 
-                coin.regenerate(this.game.width, yOffest, this.scrollVelocity);
-            }
-
+                coin.regenerate(this.baddie2.x, this.baddie2.y, this.scrollVelocity);
+            
+            coin.scale.x = 0.2;
+            coin.scale.y = 0.2;
+            this.game.add.tween(coin.scale).to({
+                x: 1,
+                y: 1
+            }, 500, "Bounce.easeOut", true, 0);
+}
         },
 
         addPlatform: function() {
@@ -577,9 +590,9 @@ define([
 
         gameWin: function() {
             this.stopGame();
-                this.player.animations.play('explode', 10, false);
-                this.baddie2.animations.play('explode', 10, false);
-                this.playerNextLevel();
+            this.player.animations.play('explode', 10, false);
+            this.baddie2.animations.play('explode', 10, false);
+            this.playerNextLevel();
 
         },
 

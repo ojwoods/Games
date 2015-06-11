@@ -5,7 +5,7 @@ define([
 
     var Coin = function Coin(game, x, y, frame) {
         var isCollected = false;
-
+        this.game = game;
         Phaser.Sprite.call(this, game, x, y, 'spritesheet', 'a1.png');
         this.anchor.setTo(0.5, 0.5);
         this.game.physics.arcade.enableBody(this);
@@ -18,31 +18,38 @@ define([
         this.checkWorldBounds = true;
         this.outOfBoundsKill = true;
 
-         // add animation phases
-    this.animations.add('spin', [
-        'a1.png',
-        'a2.png',
-        'a3.png',
-        'a4.png',
-        'a5.png',
-        'a6.png',
-        'a7.png',
-        'a8.png'
-    ], 10, true, false);
+        // add animation phases
+        this.animations.add('spin', [
+            'a1.png',
+            'a2.png',
+            'a3.png',
+            'a4.png',
+            'a5.png',
+            'a6.png',
+            'a7.png',
+            'a8.png'
+        ], 10, true, false);
 
-    // play animation
-    this.animations.play('spin', 10, true);
+        // play animation
+        this.animations.play('spin', 10, true);
     };
 
     Coin.prototype = Object.create(Phaser.Sprite.prototype);
     Coin.prototype.constructor = Coin;
 
-    Coin.prototype.regenerate = function(x,y, velocity) {
-        this.reset(x,y);
+    Coin.prototype.regenerate = function(x, y, velocity) {
+        this.reset(x, y);
         this.revive();
-        this.alpha=1;
+        this.alpha = 1;
         this.isCollected = false;
         this.body.velocity.x = velocity;
-    }
+        this.scale.x = 1;
+        this.scale.y = 1;
+
+        this.game.add.tween(this.scale).from({
+            x: 0.2,
+            y: 0.2
+        }, 250, "Bounce.easeOut", true, 0, 1, true);
+    };
     return Coin;
 });

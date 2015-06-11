@@ -24,8 +24,8 @@ BasicGame.Boot.prototype = {
         //Phaser.Canvas.setSmoothingEnabled(this.game.context, false);  //also for Canvas, legacy approach
         PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST; //for WebGL
       if (this.game.device.desktop) {
-                this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-                this.scale.setMinMax(260, 480, 768, 1024);
+                //this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+                //this.scale.setMinMax(260, 480, 768, 1024);
                 this.scale.pageAlignHorizontally = true;
                 this.scale.pageAlignVertically = true;
                 this.scale.setScreenSize(true);

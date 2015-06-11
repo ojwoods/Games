@@ -159,6 +159,7 @@
             <filename>images/sand6.png</filename>
             <filename>images/tree1.png</filename>
             <filename>images/zbomb.png</filename>
+            <filename>images/zroad.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

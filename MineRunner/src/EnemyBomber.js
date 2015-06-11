@@ -1,6 +1,8 @@
 EnemyBomber = function(game, player) {
     this.game = game;
     this.player = player;
+    this.bomberDirection = 0;
+    this.cameraWhenBomberStarts = 0;
     this.bottomOfScreenY = (window.innerHeight * this.game.scale.scaleFactor.y);
 
     Phaser.Group.call(this, this.game);
@@ -46,7 +48,8 @@ EnemyBomber.prototype.fire = function(screenTopY, gridWidth, gridHeight, gridSiz
     var bottomOfScreenY = (window.innerHeight * this.game.scale.scaleFactor.y);
     var rightOfScreenY = (window.innerWidth * this.game.scale.scaleFactor.x);
     var gridSize2 = gridSize / 2;
-
+    direction = 2;
+    this.bomberDirection = direction;
     switch (direction) {
         case 0: //top
             startX = (this.game.rnd.between(0, gridWidth - 1) * gridSize) + gridSize2;
@@ -81,6 +84,7 @@ EnemyBomber.prototype.fire = function(screenTopY, gridWidth, gridHeight, gridSiz
     this.warningIcon.reset(startX, startY);
     this.warningIcon.alpha = 1;
     this.warningIcon.bringToTop();
+    this.cameraWhenBomberStarts = this.game.camera.y;
 
 
     this.game.add.tween(this.warningIcon).to({
@@ -130,9 +134,13 @@ EnemyBomber.prototype.fire = function(screenTopY, gridWidth, gridHeight, gridSiz
 
 EnemyBomber.prototype.update = function() {
 
-if(this.alive&& (this.bomber.y-this.game.camera.y)>this.bottomOfScreenY)
-    {
+    if (this.alive && (this.bomber.y - this.game.camera.y) > this.bottomOfScreenY) {
         this.setAlive(false);
     }
     this.alive = this.bomber.alive;
+
+    if ((this.bomberDirection === 2) || (this.bomberDirection === 3)) {
+        this.warningIcon.cameraOffset.y -= this.game.camera.y-this.cameraWhenBomberStarts;
+        this.cameraWhenBomberStarts=this.game.camera.y;
+    }
 };

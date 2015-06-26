@@ -43,13 +43,10 @@ define([
         this.alpha = 1;
         this.isCollected = false;
         this.body.velocity.x = velocity;
-        this.scale.x = 1;
-        this.scale.y = 1;
+        this.scale.x = 0.2;
+        this.scale.y = 0.2;
 
-        this.game.add.tween(this.scale).from({
-            x: 0.2,
-            y: 0.2
-        }, 250, "Bounce.easeOut", true, 0, 1, true);
+       
     };
     return Coin;
 });

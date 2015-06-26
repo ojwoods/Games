@@ -62,7 +62,7 @@ define([
                 align: "center"
             };
 
-this.buttonClick = this.game.add.audio('button');
+            this.buttonClick = this.game.add.audio('button');
             // Ground
             this.groundBG = this.game.add.tileSprite(0, this.game.world.height - 80, this.game.world.width, 64, 'spritesheet', 'ground2.png');
             this.groundFG = this.game.add.tileSprite(0, this.game.world.height - 64, this.game.world.width, 64, 'spritesheet', 'ground.png');
@@ -75,30 +75,51 @@ this.buttonClick = this.game.add.audio('button');
             this.groundFG.body.immovable = true;
             this.groundFG.body.allowGravity = false;
 
+            var sponsorTextStyle = {
+                font: "20px Arial",
+                fill: "#fff",
+                align: "center"
+            };
+            this.sponsorText = this.game.add.text(this.game.width - 15, 10, "symmetrical-cow.com", sponsorTextStyle);
+            this.sponsorText.anchor.set(1, 0.5);
+
+            var grd = this.sponsorText.context.createLinearGradient(0, 0, 0, this.sponsorText.height);
+
+            //  Add in 2 color stops
+            grd.addColorStop(0, '#ffffff');
+            grd.addColorStop(1, '#aaffaa');
+
+            //  And apply to the Text
+            this.sponsorText.fill = grd;
+
+            this.sponsorText.inputEnabled = true;
+            this.sponsorText.events.onInputDown.add(function() {
+                window.open("http://www.symmetrical-cow.com")
+            }, this);
 
             this.startButton = this.game.add.button(this.game.world.centerX, 400, 'play', this.restartGame, this);
             this.startButton.anchor.set(0.5, 0);
-            this.startButton.angle=-5;
+            this.startButton.angle = -5;
 
             var buttonTween = this.game.add.tween(this.startButton);
 
             buttonTween.to({
-                angle:5
+                angle: 5
             }, 2000, Phaser.Easing.Sinusoidal.InOut, true, 100, -1, true);
 
 
-            var logo = this.game.add.sprite(this.game.world.centerX, 175,'logo');
-            logo.anchor.set(0.5,0.5);
+            var logo = this.game.add.sprite(this.game.world.centerX, 175, 'logo');
+            logo.anchor.set(0.5, 0.5);
 
-             var logoBounce = this.game.add.tween(logo.scale);
+            var logoBounce = this.game.add.tween(logo.scale);
 
             logoBounce.to({
                 'x': 0.8,
-                'y':1.2
+                'y': 1.2
             }, 1000, Phaser.Easing.Sinusoidal.InOut, true, 100, -1, true);
-           // logoBounce.start();
+            // logoBounce.start();
 
-           this.baddie2 = new Baddie2(this.game, this.game.world.width / 2, (this.game.world.height / 2)+40, null);
+            this.baddie2 = new Baddie2(this.game, this.game.world.width / 2, (this.game.world.height / 2) + 40, null);
             this.game.add.existing(this.baddie2);
 
             //this.gameOverBoard.add(this.startButton);

@@ -19,6 +19,7 @@ define([
         this.baddie2 = null;
         this.emitter = null;
         this.arrow = null;
+        this.helpplatform = null;
         // this.playerEmitter = null;
         // this.startButton = null;
         //this.platformsLeftText = null;
@@ -26,7 +27,8 @@ define([
         this.finalScoreText = null;
         this.infoBoard = null;
         this.boardText = null;
-        this.helpText
+        this.helpText = null;
+        this.sponsorText = null;
 
         this.gameOverBoard = null
 
@@ -156,11 +158,42 @@ define([
             this.boardText.anchor.set(0.5, 0);
 
 
+            this.helpText = this.game.add.text(this.game.world.centerX, this.game.world.centerY, "Add Platform", finalStyle);
+            this.helpText.anchor.set(0.5, 0);
+            this.helpText.visible = false;
+
+            var sponsorTextStyle = {
+                font: "20px Arial",
+                fill: "#fff",
+                align: "center"
+            };
+            this.sponsorText = this.game.add.text(this.game.width - 15, 10, "symmetrical-cow.com", sponsorTextStyle);
+            this.sponsorText.anchor.set(1, 0.5);
+
+            var grd = this.sponsorText.context.createLinearGradient(0, 0, 0, this.sponsorText.height);
+
+            //  Add in 2 color stops
+            grd.addColorStop(0, '#ffffff');
+            grd.addColorStop(1, '#aaffaa');
+
+            //  And apply to the Text
+            this.sponsorText.fill = grd;
+
+            this.sponsorText.inputEnabled = true;
+            this.sponsorText.events.onInputDown.add(function() {
+                window.open("http://www.symmetrical-cow.com")
+            }, this);
+
+
+
+
             this.startButton = this.game.add.button(this.game.world.centerX, 350, 'play', this.startButtonEvent, this);
             this.startButton.anchor.set(0.5, 0);
 
             this.gameOverBoard.add(this.startButton);
             this.gameOverBoard.visible = true;
+
+
 
 
             //sound
@@ -183,6 +216,10 @@ define([
             coinsGraphic.anchor.set(1, 0);
             this.scoreText = this.game.add.text(this.game.world.centerX + 5, 5, this.score, style);
             this.scoreText.anchor.set(0, 0);
+
+            this.helpplatform = this.game.add.sprite(this.player.x, this.game.world.centerY + 100, 'spritesheet', 'helpplatform.png');
+            this.helpplatform.anchor.set(0.5, 0.5);
+            this.helpplatform.visible = false;
 
             this.arrow = this.game.add.sprite(100, 40, 'spritesheet', 'Up-Green.png');
             this.arrow.anchor.set(0.5, 0.5);
@@ -261,13 +298,24 @@ define([
             // openingTween.start();
 
             this.arrow.reset(this.player.x, 40);
-            var openingTween = this.game.add.tween(this.arrow).to({
+            this.helpplatform.visible = true;
+
+
+            this.game.add.tween(this.helpplatform).to({
 
                 alpha: 0
             }, 150, Phaser.Easing.Cubic.InOut, true, 0, 5, true).onComplete.addOnce(function() {
-                this.arrow.kill()
+                this.arrow.kill();
+                this.helpplatform.visible = false;
             }, this);
 
+            var openingTween = this.game.add.tween(this.arrow).to({
+
+                alpha: 0
+            }, 300, Phaser.Easing.Cubic.InOut, true, 0, 5, true).onComplete.addOnce(function() {
+                this.arrow.kill();
+                this.helpText.visible = false;
+            }, this);
 
 
             //this.addBaddie2();
@@ -468,14 +516,18 @@ define([
                 var yOffest = this.game.rnd.integerInRange(this.game.height / 2 - 100, this.game.height / 2 + 100);
 
                 coin.regenerate(this.baddie2.x, this.baddie2.y, this.scrollVelocity);
-            
-            coin.scale.x = 0.2;
-            coin.scale.y = 0.2;
-            this.game.add.tween(coin.scale).to({
-                x: 1,
-                y: 1
-            }, 500, "Bounce.easeOut", true, 0);
-}
+
+                //coin.scale.x = 0.2;
+                //coin.scale.y = 0.2;
+                if (!coin.tween2) {
+                    coin.tween2 = this.game.add.tween(coin.scale).to({
+                        x: 1,
+                        y: 1
+                    }, 1000, "Cubic.easeOut");
+                } 
+
+                coin.tween2.start();
+            }
         },
 
         addPlatform: function() {

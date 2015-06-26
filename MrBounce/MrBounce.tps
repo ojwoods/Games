@@ -194,6 +194,7 @@
             <filename>assets/spritesheets/explodes/explode-4.png</filename>
             <filename>assets/spritesheets/explodes/explode-5.png</filename>
             <filename>assets/spritesheets/Stage-Clear.png</filename>
+            <filename>../../games/MrBounce/assets/helpplatform.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

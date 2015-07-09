@@ -173,8 +173,8 @@ define([
             var grd = this.sponsorText.context.createLinearGradient(0, 0, 0, this.sponsorText.height);
 
             //  Add in 2 color stops
-            grd.addColorStop(0, '#ffffff');
-            grd.addColorStop(1, '#aaffaa');
+            grd.addColorStop(0, '#000000');
+            grd.addColorStop(1, '#6b9e04');
 
             //  And apply to the Text
             this.sponsorText.fill = grd;
@@ -304,7 +304,7 @@ define([
             this.game.add.tween(this.helpplatform).to({
 
                 alpha: 0
-            }, 150, Phaser.Easing.Cubic.InOut, true, 0, 5, true).onComplete.addOnce(function() {
+            }, 150, Phaser.Easing.Cubic.InOut, true, 0, 10, true).onComplete.addOnce(function() {
                 this.arrow.kill();
                 this.helpplatform.visible = false;
             }, this);
@@ -523,7 +523,7 @@ define([
                     coin.tween2 = this.game.add.tween(coin.scale).to({
                         x: 1,
                         y: 1
-                    }, 1000, "Cubic.easeOut");
+                    }, 1500, "Cubic.easeOut");
                 } 
 
                 coin.tween2.start();

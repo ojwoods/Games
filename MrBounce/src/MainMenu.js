@@ -86,8 +86,8 @@ define([
             var grd = this.sponsorText.context.createLinearGradient(0, 0, 0, this.sponsorText.height);
 
             //  Add in 2 color stops
-            grd.addColorStop(0, '#ffffff');
-            grd.addColorStop(1, '#aaffaa');
+            grd.addColorStop(0, '#000000');
+            grd.addColorStop(1, '#6b9e04');
 
             //  And apply to the Text
             this.sponsorText.fill = grd;

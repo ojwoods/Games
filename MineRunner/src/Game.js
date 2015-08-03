@@ -489,7 +489,7 @@ BasicGame.Game.prototype = {
             }
             // this.map.layers[0].dirty = true;
             var chanceOfMine = 0;
-            if (this.difficultyLevel < 10) {
+            if (this.difficultyLevel < 5) {
                 chanceOfMine = this.game.rnd.between(0, 1);
             }
             if (chanceOfMine === 0) {
